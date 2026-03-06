@@ -161,7 +161,7 @@ class _DrawingToolPanelState extends State<DrawingToolPanel> {
   }
 
   // 핸들 바
-  Widget _buildHandle() {
+  Widget  _buildHandle() {
     return GestureDetector(
       onTap: widget.onClose,
       onVerticalDragEnd: (details) {

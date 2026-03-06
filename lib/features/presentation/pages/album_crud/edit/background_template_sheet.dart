@@ -4,29 +4,30 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:petAblumMobile/core/theme/app_colors.dart';
 import 'package:petAblumMobile/core/theme/app_fonts_style_suit.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/color_select_scale.dart';
+import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/photo_gallery_sheet.dart';
 
 class BackgroundTabletPanel extends StatefulWidget {
-  final VoidCallback onClose;
+  final VoidCallback onClose;  // ✕ 엑스: 수정 취소 후 닫기
+  final VoidCallback onSave;   // ✓ 체크: 저장 후 닫기
   final ValueChanged<Color?>? onColorChanged;
   final Color? selectedColor;
 
   const BackgroundTabletPanel({
     super.key,
     required this.onClose,
+    required this.onSave,
     this.onColorChanged,
     this.selectedColor,
   });
 
   @override
-  State<BackgroundTabletPanel> createState() =>
-      _BackgroundTabletPanelState();
+  State<BackgroundTabletPanel> createState() => _BackgroundTabletPanelState();
 }
 
 class _BackgroundTabletPanelState extends State<BackgroundTabletPanel> {
   int selectedTabIndex = 1;
   Color? selectedColor;
 
-  // 무지(index 1)일 때만 색상 섹션 표시
   bool get _showColorSection => selectedTabIndex == 1;
 
   @override
@@ -35,12 +36,21 @@ class _BackgroundTabletPanelState extends State<BackgroundTabletPanel> {
     selectedColor = widget.selectedColor;
   }
 
+  // 사진추가 탭 → PhotoGalleryBottomSheet 열기
+  Future<void> _openPhotoGallery() async {
+    final selectedPhotos = await PhotoGalleryBottomSheet.show(context);
+    if (selectedPhotos != null && selectedPhotos.isNotEmpty) {
+      // TODO: 선택된 사진 처리
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeInOut,
-      height: _showColorSection ? 350 : 253, // 색상 섹션 유무에 따라 높이 변경
+      // 핸들바(28px) 제거 → 헤더(56px)로 대체, 높이 재조정
+      height: _showColorSection ? 320 : 253,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
@@ -64,45 +74,67 @@ class _BackgroundTabletPanelState extends State<BackgroundTabletPanel> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHandle(),
+            // ✅ 핸들바 삭제 → 헤더(엑스 / 배경 / 체크)로 대체
+            _buildHeader(),
 
             const SizedBox(height: 20),
-            _buildSectionLabel('배경 템플릿'),
-            const SizedBox(height: 20),
+            // ✅ "배경 템플릿" 텍스트 삭제 → 바로 탭
             _buildTabs(),
 
-            // 무지 선택 시에만 색상 섹션 표시
-            if (_showColorSection) ...[
-              const SizedBox(height: 20),
-              _buildSectionLabel('색상'),
-              const SizedBox(height: 20),
-              _buildColorSection(),
-            ],
+          if (_showColorSection) ...[
+        const SizedBox(height: 20),
+    _buildColorSection(),
+    ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHandle() {
-    return GestureDetector(
-        onTap: widget.onClose,
-        onVerticalDragEnd: (details) {
-          if (details.primaryVelocity != null && details.primaryVelocity! > 0) {
-            widget.onClose();
-          }
-        },
-        behavior: HitTestBehavior.opaque,
-        child:Center(
-          child: Container(
-          margin: const EdgeInsets.only(top: 12),
-          width: 54,
-          height: 4,
-          decoration: BoxDecoration(
-            color: AppColors.gray03,
-            borderRadius: BorderRadius.circular(30),
+  // ✅ 새 헤더: 엑스 / "배경" / 체크
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: Row(
+        children: [
+          // ✕ 엑스: 변경 취소 + 시트 닫기
+          GestureDetector(
+            onTap: widget.onClose,
+            child: SvgPicture.asset(
+              'assets/system/icons/icon_close_big.svg',
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(
+                AppColors.f05,
+                BlendMode.srcIn,
+              ),
+            ),
           ),
-        ),
+
+          // 중앙 "배경" 텍스트
+          Expanded(
+            child: Center(
+              child: Text(
+                '배경',
+                style: AppTextStyle.description14R120,
+              ),
+            ),
+          ),
+
+          // ✓ 체크: 저장 + 시트 닫기
+          GestureDetector(
+            onTap: widget.onSave,
+            child: SvgPicture.asset(
+              'assets/system/icons/icon_check.svg',
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(
+                AppColors.f05,
+                BlendMode.srcIn,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -112,9 +144,7 @@ class _BackgroundTabletPanelState extends State<BackgroundTabletPanel> {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Text(
         title,
-        style: AppTextStyle.description14M120.copyWith(
-          color: AppColors.f05,
-        ),
+        style: AppTextStyle.description14M120.copyWith(color: AppColors.f05),
       ),
     );
   }
@@ -125,13 +155,60 @@ class _BackgroundTabletPanelState extends State<BackgroundTabletPanel> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildTab(0, '사진추가'),
-          const SizedBox(width: 8),
+          // ✅ 사진추가: 탭 + 갤러리 시트 연결
+          _buildPhotoAddTab(),
+          const SizedBox(width: 12),
           _buildTab(1, '무지'),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           _buildTab(2, '모눈종이'),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           _buildTab(3, '글종이'),
+        ],
+      ),
+    );
+  }
+
+  // ✅ 사진추가 탭 (PhotoGalleryBottomSheet 연결)
+  Widget _buildPhotoAddTab() {
+    final isSelected = selectedTabIndex == 0;
+    return GestureDetector(
+      onTap: () {
+        setState(() => selectedTabIndex = 0);
+        _openPhotoGallery();
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          DottedBorder(
+            options: RoundedRectDottedBorderOptions(
+              dashPattern: const [4, 4],
+              strokeWidth: 1.5,
+              radius: const Radius.circular(12),
+              color: isSelected ? AppColors.main : AppColors.gray03,
+              padding: EdgeInsets.zero,
+            ),
+            child: SizedBox(
+              width: 92,
+              height: 106,
+              child: Center(
+                child: SvgPicture.asset(
+                  'assets/system/icons/icon_add.svg',
+                  width: 24,
+                  height: 24,
+                  colorFilter: ColorFilter.mode(
+                    isSelected ? AppColors.main : AppColors.f02,
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '사진추가',
+            style: AppTextStyle.caption12R120.copyWith(color: AppColors.f04),
+          ),
         ],
       ),
     );
@@ -152,57 +229,28 @@ class _BackgroundTabletPanelState extends State<BackgroundTabletPanel> {
 
   Widget _buildTab(int index, String label) {
     final isSelected = selectedTabIndex == index;
-
     return GestureDetector(
       onTap: () => setState(() => selectedTabIndex = index),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          if (index == 0)
-            DottedBorder(
-              options: RoundedRectDottedBorderOptions(
-                dashPattern: const [4, 4],
-                strokeWidth: 1.5,
-                radius: const Radius.circular(12),
-                color: AppColors.gray03,
-                padding: EdgeInsets.zero,
+          Container(
+            width: 92,
+            height: 106,
+            decoration: BoxDecoration(
+              color: AppColors.f01,
+              border: Border.all(
+                color: isSelected ? AppColors.main : AppColors.gray01,
+                width: isSelected ? 2 : 1,
               ),
-              child: SizedBox(
-                width: 92,
-                height: 106,
-                child: Center(
-                  child: SvgPicture.asset(
-                    'assets/system/icons/icon_add.svg',
-                    width: 24,
-                    height: 24,
-                    colorFilter: ColorFilter.mode(
-                      AppColors.gray03,
-                      BlendMode.srcIn,
-                    ),
-                  ),
-                ),
-              ),
-            )
-          else
-            Container(
-              width: 92,
-              height: 106,
-              decoration: BoxDecoration(
-                color: AppColors.f01,
-                border: Border.all(
-                  color: isSelected ? AppColors.main : AppColors.gray01,
-                  width: isSelected ? 2 : 1,
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
+              borderRadius: BorderRadius.circular(12),
             ),
+          ),
           const SizedBox(height: 12),
           Text(
             label,
-            style: AppTextStyle.caption12R120.copyWith(
-              color: AppColors.f04,
-            ),
+            style: AppTextStyle.caption12R120.copyWith(color: AppColors.f04),
           ),
         ],
       ),

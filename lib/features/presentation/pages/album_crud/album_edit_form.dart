@@ -216,14 +216,19 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
             curve: Curves.easeOut,
             left: 0, right: 0,
             bottom: _showBackgroundPanel ? 0 : -400,
-            child: BackgroundTabletPanel(
-              onClose: () => setState(() => _showBackgroundPanel = false),
-              onColorChanged: (color) {
-                _applyState(_current.copyWith(
-                  background: BackgroundState(color: color),
-                ));
-              },
-            ),
+              child: BackgroundTabletPanel(
+                onClose: () => setState(() => _showBackgroundPanel = false),
+
+                onSave: () {
+                  setState(() => _showBackgroundPanel = false);
+                },
+
+                onColorChanged: (color) {
+                  _applyState(_current.copyWith(
+                    background: BackgroundState(color: color),
+                  ));
+                },
+              ),
           ),
 
           // 5. 드로잉 툴 패널

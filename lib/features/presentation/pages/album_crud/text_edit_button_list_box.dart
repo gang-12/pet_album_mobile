@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:petAblumMobile/core/theme/app_colors.dart';
+import 'package:petAblumMobile/features/presentation/pages/album_crud/text_edit/text_color_select_sheet.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/photo_gallery_sheet.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/sticker_search_bottom_sheet.dart';
 
@@ -110,7 +111,16 @@ class _TextEditorIconBarState extends State<TextEditorIconBar> {
 
           // 컬러 원: 24x24, main 색상, stroke 2.5px rgba(0,0,0,0.1)
           GestureDetector(
-            onTap: () {},
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                showDragHandle: false,
+                backgroundColor: Colors.transparent,
+                builder: (context) => TextColorSelect(
+                  onClose: () => Navigator.pop(context),
+                ),
+              );
+            },
             child: Container(
               width: 24,
               height: 24,

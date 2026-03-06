@@ -136,7 +136,7 @@ class _ColorSelectorSectionState extends State<ColorSelectorSection> {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: Colors.black.withOpacity(0.1),
-                  width: 1,
+                  width: 2.5,
                 ),
               ),
             ),

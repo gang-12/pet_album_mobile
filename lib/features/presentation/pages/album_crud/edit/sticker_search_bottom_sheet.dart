@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:petAblumMobile/core/theme/app_colors.dart';
 import 'package:petAblumMobile/core/theme/app_fonts_style_suit.dart';
+import 'package:petAblumMobile/core/widgets/app_text_field.dart';
 
 // 스티커 모델
 class Sticker {
@@ -37,6 +38,7 @@ class _StickerBottomSheetState extends State<StickerBottomSheet>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
 
   final List<String> _categories = ['전체', '문자', '장난감', '데코', '음식', '자연'];
 
@@ -82,6 +84,8 @@ class _StickerBottomSheetState extends State<StickerBottomSheet>
     ],
   };
 
+  bool get isSearching => _searchController.text.isNotEmpty;
+
   @override
   void initState() {
     super.initState();
@@ -93,6 +97,7 @@ class _StickerBottomSheetState extends State<StickerBottomSheet>
   void dispose() {
     _tabController.dispose();
     _searchController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -103,13 +108,12 @@ class _StickerBottomSheetState extends State<StickerBottomSheet>
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final double initialHeight = 340.0;
-    final maxHeight = screenHeight * 0.9;
+    final double initialHeight = 400.0;
 
     return DraggableScrollableSheet(
       initialChildSize: initialHeight / screenHeight,
       minChildSize: initialHeight / screenHeight,
-      maxChildSize: maxHeight / screenHeight,
+      maxChildSize: 0.92,
       expand: true,
       builder: (context, scrollController) {
         return Container(
@@ -123,7 +127,7 @@ class _StickerBottomSheetState extends State<StickerBottomSheet>
             ),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x0A000000), // rgba(0,0,0,0.04)
+                color: Color(0x0A000000),
                 offset: Offset(0, -4),
                 blurRadius: 12,
                 spreadRadius: 0,
@@ -132,136 +136,44 @@ class _StickerBottomSheetState extends State<StickerBottomSheet>
           ),
           child: Column(
             children: [
-              // 헤더 영역 (핸들 + 검색 + 탭)
-              SingleChildScrollView(
-                controller: scrollController,
-                physics: const ClampingScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 핸들바 (54x4, gray03, radius 30)
-                    Center(
-                      child: Container(
-                        margin: const EdgeInsets.only(top: 12),
-                        width: 54,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: AppColors.gray03,
-                          borderRadius: BorderRadius.circular(30),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(),
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: AppTextField(
+                      controller: _searchController,
+                      focusNode: _focusNode,
+                      hintText: '검색어를 입력해주세요.',
+                      prefixIcon: SvgPicture.asset(
+                        'assets/system/icons/icon_search.svg',
+                        width: 24,
+                        height: 24,
+                        colorFilter: const ColorFilter.mode(
+                          AppColors.gray03,
+                          BlendMode.srcIn,
                         ),
                       ),
+                      suffixIcon: isSearching
+                          ? IconButton(
+                        icon: const Icon(Icons.close, color: AppColors.gray03),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {});
+                        },
+                      )
+                          : null,
+                      onChanged: (value) => setState(() {}),
                     ),
-
-                    const SizedBox(height: 20),
-
-                    // 검색창
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.gray01,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            SvgPicture.asset(
-                              'assets/system/icons/icon_search.svg',
-                              width: 20,
-                              height: 20,
-                              colorFilter: ColorFilter.mode(
-                                AppColors.gray04,
-                                BlendMode.srcIn,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: TextField(
-                                controller: _searchController,
-                                style: AppTextStyle.description14R120.copyWith(
-                                  color: AppColors.f04,
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: '검색어를 입력해주세요.',
-                                  hintStyle: AppTextStyle.description14R120.copyWith(
-                                    color: AppColors.f04,
-                                  ),
-                                  border: InputBorder.none,
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.zero,
-                                  suffixIcon: _searchController.text.isNotEmpty
-                                      ? GestureDetector(
-                                    onTap: () {
-                                      _searchController.clear();
-                                      setState(() {});
-                                    },
-                                    child: Icon(
-                                      Icons.close,
-                                      size: 18,
-                                      color: AppColors.gray04,
-                                    ),
-                                  )
-                                      : null,
-                                  suffixIconConstraints: const BoxConstraints(
-                                    minWidth: 18,
-                                    minHeight: 18,
-                                  ),
-                                ),
-                                onChanged: (value) {
-                                  setState(() {});
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // 카테고리 탭
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: List.generate(_categories.length, (index) {
-                            final isSelected = _tabController.index == index;
-                            return GestureDetector(
-                              onTap: () {
-                                _tabController.animateTo(index);
-                              },
-                              child: Container(
-                                margin: EdgeInsets.only(
-                                  right: index < _categories.length - 1 ? 8 : 0,
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isSelected ? AppColors.gray02 : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  _categories[index],
-                                  style: AppTextStyle.description14M120.copyWith(
-                                    color: isSelected ? AppColors.f05 : AppColors.f02,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildCategoryTabs(),
+                  const SizedBox(height: 16),
+                ],
               ),
 
-              // 스티커 그리드
               Expanded(
                 child: TabBarView(
                   controller: _tabController,
@@ -273,7 +185,7 @@ class _StickerBottomSheetState extends State<StickerBottomSheet>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.image_not_supported_outlined,
                               size: 64,
                               color: AppColors.gray03,
@@ -320,6 +232,87 @@ class _StickerBottomSheetState extends State<StickerBottomSheet>
           ),
         );
       },
+    );
+  }
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: Row(
+        children: [
+          // ✕ 엑스: Navigator.pop (반환값 없음 = 취소)
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: SvgPicture.asset(
+              'assets/system/icons/icon_close_big.svg',
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(
+                AppColors.f05,
+                BlendMode.srcIn,
+              ),
+            ),
+          ),
+
+          // 중앙 "스티커" 텍스트
+          Expanded(
+            child: Center(
+              child: Text('스티커', style: AppTextStyle.description14R120),
+            ),
+          ),
+
+          // ✓ 체크: Navigator.pop (반환값 없음 = 확인)
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: SvgPicture.asset(
+              'assets/system/icons/icon_check.svg',
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(
+                AppColors.f05,
+                BlendMode.srcIn,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryTabs() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: List.generate(_categories.length, (index) {
+            final isSelected = _tabController.index == index;
+            return GestureDetector(
+              onTap: () => _tabController.animateTo(index),
+              child: Container(
+                margin: EdgeInsets.only(
+                  right: index < _categories.length - 1 ? 12 : 0,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(50),
+                  border: Border.all(
+                    color: isSelected ? AppColors.f05 : AppColors.f02,
+                    width: 1.5,
+                  ),
+                ),
+                child: Text(
+                  _categories[index],
+                  style: AppTextStyle.description14M120.copyWith(
+                    color: isSelected ? AppColors.f05 : AppColors.f02,
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+      ),
     );
   }
 }
