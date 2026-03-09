@@ -5,7 +5,7 @@ import 'package:petAblumMobile/core/theme/app_colors.dart';
 import 'package:petAblumMobile/core/theme/app_fonts_style_suit.dart';
 import 'package:petAblumMobile/core/theme/app_text_semantic.dart';
 import 'package:petAblumMobile/core/widgets/app_text_field.dart';
-import 'package:petAblumMobile/features/presentation/pages/auth/login_form.dart';
+import 'package:petAblumMobile/features/presentation/pages/auth/guardian_info_page.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -52,27 +52,27 @@ class _SignUpPageState extends State<SignUpPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-        appBar: AppBar(
-          title: Text('회원가입', style: AppTextStyle.subtitle20M120.copyWith(
-              color: AppColors.f05),
-          ),
-          backgroundColor: Colors.white,
-          elevation: 0,
-          titleSpacing: 0,
-          leading: Padding(
-            padding: const EdgeInsets.only(left: 20),
-            child: IconButton(
-              onPressed: () => Navigator.pop(context),
-              icon: SvgPicture.asset('assets/system/icons/icon_chevron_right.svg',
-                width: 24,
-                height: 24,
-                colorFilter: ColorFilter.mode(
-                  AppColors.f05,
-                  BlendMode.srcIn,),
-              ),
+      appBar: AppBar(
+        title: Text('회원가입', style: AppTextStyle.subtitle20M120.copyWith(
+            color: AppColors.f05),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        titleSpacing: 0,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 20),
+          child: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: SvgPicture.asset('assets/system/icons/icon_chevron_right.svg',
+              width: 24,
+              height: 24,
+              colorFilter: ColorFilter.mode(
+                AppColors.f05,
+                BlendMode.srcIn,),
             ),
           ),
         ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -197,7 +197,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const IdLoginPage(),
+                          builder: (_) => const Guardian_info_page(),
                         ),
                       );
                     }

@@ -22,6 +22,8 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
   bool _showDrawingPanel = false;
   bool _showModalSheet = false;
   bool _isDrawingMode = false;
+  int? _selectedTextIndex;
+  final List<_CanvasText> _canvasTexts = [];
 
   EditorState _current = EditorState();
   List<EditorState> _history = [];
@@ -70,6 +72,21 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
     _redoStack.clear();
   }
 
+  final TextEditingController _textInputController = TextEditingController();
+  final FocusNode _textFocusNode = FocusNode();
+  bool _isTextMode = false;
+
+  void _onTextConfirmed() {
+    if (_textInputController.text.isNotEmpty) {
+      setState(() {
+        _canvasTexts.add(_CanvasText(text: _textInputController.text));
+        _selectedTextIndex = _canvasTexts.length - 1;
+      });
+    }
+    _textInputController.clear();
+    _textFocusNode.unfocus();
+    setState(() => _isTextMode = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +133,7 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               GestureDetector(
-                onTap: () {},
+                onTap:  () => Navigator.pop(context),
                 child: Text(
                   '취소',
                   style: AppTextStyle.body16R120.copyWith(
@@ -156,7 +173,11 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
             ),
 
           Positioned.fill(
-            child: SafeArea(child: _first()),
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedTextIndex = null),
+              behavior: HitTestBehavior.translucent,
+              child: SafeArea(child: _first()),
+            ),
           ),
 
           if (_isDrawingMode || _current.drawingPoints.isNotEmpty)
@@ -216,21 +237,112 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
             curve: Curves.easeOut,
             left: 0, right: 0,
             bottom: _showBackgroundPanel ? 0 : -400,
-              child: BackgroundTabletPanel(
-                onClose: () => setState(() => _showBackgroundPanel = false),
-
-                onSave: () {
-                  setState(() => _showBackgroundPanel = false);
-                },
-
-                onColorChanged: (color) {
-                  _applyState(_current.copyWith(
-                    background: BackgroundState(color: color),
-                  ));
-                },
-              ),
+            child: BackgroundTabletPanel(
+              onClose: () => setState(() => _showBackgroundPanel = false),
+              onSave: () {
+                setState(() => _showBackgroundPanel = false);
+              },
+              onColorChanged: (color) {
+                _applyState(_current.copyWith(
+                  background: BackgroundState(color: color),
+                ));
+              },
+            ),
           ),
 
+          ..._canvasTexts.asMap().entries.map((entry) {
+            final index = entry.key;
+            final item = entry.value;
+            final isSelected = _selectedTextIndex == index;
+            const handleSize = 24.0;
+            const padding = handleSize / 2;
+
+            return Positioned(
+              left: item.x - padding,
+              top: item.y - padding,
+              child: GestureDetector(
+                onTap: () => setState(() {
+                  if (_selectedTextIndex == index) {
+                    _selectedTextIndex = null;
+                  } else {
+                    _selectedTextIndex = index;
+                  }
+                }),
+                onPanUpdate: (details) {
+                  setState(() {
+                    item.x += details.delta.dx;
+                    item.y += details.delta.dy;
+                  });
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(padding),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: isSelected
+                            ? BoxDecoration(
+                          border: Border.all(color: Colors.blue, width: 1.5),
+                          borderRadius: BorderRadius.circular(4),
+                        )
+                            : BoxDecoration(
+                          border: Border.all(color: Colors.transparent, width: 1.5),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          item.text,
+                          style: TextStyle(fontSize: item.fontSize, color: Colors.black),
+                        ),
+                      ),
+                      if (isSelected)
+                        Positioned(
+                          right: -padding,
+                          bottom: -padding,
+                          child: GestureDetector(
+                            onPanUpdate: (details) {
+                              setState(() {
+                                item.fontSize = (item.fontSize + details.delta.dx * 0.3).clamp(8, 80);
+                              });
+                            },
+                            child: Container(
+                              width: handleSize,
+                              height: handleSize,
+                              decoration: const BoxDecoration(
+                                color: Colors.blue,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                        ),
+                      if (isSelected)
+                        Positioned(
+                          right: -padding,
+                          top: -padding,
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _canvasTexts.removeAt(index);
+                                _selectedTextIndex = null;
+                              });
+                            },
+                            child: Container(
+                              width: handleSize,
+                              height: handleSize,
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.close, size: 14, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
           // 5. 드로잉 툴 패널
           AnimatedPositioned(
             duration: const Duration(milliseconds: 250),
@@ -252,12 +364,30 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
             ),
           ),
 
+          if (_isTextMode)
+            Positioned(
+              left: 40, right: 40, top: 200,
+              child: TextField(
+                controller: _textInputController,
+                focusNode: _textFocusNode,
+                autofocus: true,
+                maxLines: null,
+                keyboardType: TextInputType.multiline,
+                textInputAction: TextInputAction.newline,
+                decoration: const InputDecoration(
+                  hintText: '텍스트 입력',
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
+
           // 6. 하단 아이콘바
           if (!_showBackgroundPanel && !_showDrawingPanel && !_showModalSheet)
             Positioned(
               left: 0, right: 0, bottom: 24 + MediaQuery.of(context).padding.bottom,
               child: Center(
                 child: EditorIconBar(
+                  isTextMode: _isTextMode,
                   onBackgroundPressed: () {
                     setState(() {
                       _showBackgroundPanel = !_showBackgroundPanel;
@@ -275,9 +405,30 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
                   },
                   onSheetOpened: () => setState(() => _showModalSheet = true),
                   onSheetClosed: () => setState(() => _showModalSheet = false),
+                  onTextPressed: () {
+                    setState(() => _isTextMode = true);
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _textFocusNode.requestFocus();
+                    });
+                  },
+                  onTextClosed: () {
+                    if (_textInputController.text.isNotEmpty) {
+                      setState(() {
+                        _canvasTexts.add(_CanvasText(text: _textInputController.text));
+                        _selectedTextIndex = _canvasTexts.length - 1;
+                      });
+                    }
+                    _textInputController.clear();
+                    _textFocusNode.unfocus();
+                    setState(() {
+                      _isTextMode = false;
+                    });
+                  },
                 ),
               ),
             ),
+
+
         ],
       ),
     );
@@ -439,4 +590,12 @@ class DrawingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+class _CanvasText {
+  final String text;
+  double x;
+  double y;
+  double fontSize;
+  _CanvasText({required this.text, this.x = 80, this.y = 200, this.fontSize = 16});
 }

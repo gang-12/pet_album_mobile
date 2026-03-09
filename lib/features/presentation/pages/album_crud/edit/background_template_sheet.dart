@@ -7,10 +7,10 @@ import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/color
 import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/photo_gallery_sheet.dart';
 
 class BackgroundTabletPanel extends StatefulWidget {
-  final VoidCallback onClose;  // ✕ 엑스: 수정 취소 후 닫기
-  final VoidCallback onSave;   // ✓ 체크: 저장 후 닫기
+  final VoidCallback onClose;
   final ValueChanged<Color?>? onColorChanged;
   final Color? selectedColor;
+  final VoidCallback onSave;   // ✓ 체크: 저장 후 닫기
 
   const BackgroundTabletPanel({
     super.key,
@@ -21,13 +21,15 @@ class BackgroundTabletPanel extends StatefulWidget {
   });
 
   @override
-  State<BackgroundTabletPanel> createState() => _BackgroundTabletPanelState();
+  State<BackgroundTabletPanel> createState() =>
+      _BackgroundTabletPanelState();
 }
 
 class _BackgroundTabletPanelState extends State<BackgroundTabletPanel> {
   int selectedTabIndex = 1;
   Color? selectedColor;
 
+  // 무지(index 1)일 때만 색상 섹션 표시
   bool get _showColorSection => selectedTabIndex == 1;
 
   @override
@@ -36,7 +38,6 @@ class _BackgroundTabletPanelState extends State<BackgroundTabletPanel> {
     selectedColor = widget.selectedColor;
   }
 
-  // 사진추가 탭 → PhotoGalleryBottomSheet 열기
   Future<void> _openPhotoGallery() async {
     final selectedPhotos = await PhotoGalleryBottomSheet.show(context);
     if (selectedPhotos != null && selectedPhotos.isNotEmpty) {
@@ -74,24 +75,22 @@ class _BackgroundTabletPanelState extends State<BackgroundTabletPanel> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ✅ 핸들바 삭제 → 헤더(엑스 / 배경 / 체크)로 대체
             _buildHeader(),
 
             const SizedBox(height: 20),
-            // ✅ "배경 템플릿" 텍스트 삭제 → 바로 탭
             _buildTabs(),
 
-          if (_showColorSection) ...[
-        const SizedBox(height: 20),
-    _buildColorSection(),
-    ],
+            // 무지 선택 시에만 색상 섹션 표시
+            if (_showColorSection) ...[
+              const SizedBox(height: 20),
+              _buildColorSection(),
+            ],
           ],
         ),
       ),
     );
   }
 
-  // ✅ 새 헤더: 엑스 / "배경" / 체크
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
@@ -111,7 +110,6 @@ class _BackgroundTabletPanelState extends State<BackgroundTabletPanel> {
             ),
           ),
 
-          // 중앙 "배경" 텍스트
           Expanded(
             child: Center(
               child: Text(
@@ -144,18 +142,20 @@ class _BackgroundTabletPanelState extends State<BackgroundTabletPanel> {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Text(
         title,
-        style: AppTextStyle.description14M120.copyWith(color: AppColors.f05),
+        style: AppTextStyle.description14M120.copyWith(
+          color: AppColors.f05,
+        ),
       ),
     );
   }
 
   Widget _buildTabs() {
-    return Padding(
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ✅ 사진추가: 탭 + 갤러리 시트 연결
           _buildPhotoAddTab(),
           const SizedBox(width: 12),
           _buildTab(1, '무지'),
@@ -168,7 +168,6 @@ class _BackgroundTabletPanelState extends State<BackgroundTabletPanel> {
     );
   }
 
-  // ✅ 사진추가 탭 (PhotoGalleryBottomSheet 연결)
   Widget _buildPhotoAddTab() {
     final isSelected = selectedTabIndex == 0;
     return GestureDetector(
@@ -229,6 +228,7 @@ class _BackgroundTabletPanelState extends State<BackgroundTabletPanel> {
 
   Widget _buildTab(int index, String label) {
     final isSelected = selectedTabIndex == index;
+
     return GestureDetector(
       onTap: () => setState(() => selectedTabIndex = index),
       child: Column(
@@ -250,7 +250,9 @@ class _BackgroundTabletPanelState extends State<BackgroundTabletPanel> {
           const SizedBox(height: 12),
           Text(
             label,
-            style: AppTextStyle.caption12R120.copyWith(color: AppColors.f04),
+            style: AppTextStyle.caption12R120.copyWith(
+              color: AppColors.f04,
+            ),
           ),
         ],
       ),

@@ -70,7 +70,7 @@ class PetCard extends StatelessWidget {
                     top: 29 * s,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12 * s),
-                      child: Image.network(
+                      child: Image.asset(
                         imageUrl,
                         width: 118 * s,
                         height: 120 * s,

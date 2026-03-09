@@ -34,48 +34,48 @@ class HomePage extends StatelessWidget {
         ],
       ),
       body: SafeArea(
-        child: Stack(
-          children: [
-            Positioned(
-              bottom: 155,
-              left: 0,
-              right: 0,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '함께한 추억들을 정리해,\n또또와의 이야기를 만들어보세요',
-                    textAlign: TextAlign.center,
-                    style: AppTextStyleDahyun.dahyun(
-                      size: 24,
-                      weight: FontWeight.w400,
-                      height: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  SizedBox(
-                    width: 171,
-                    height: 55,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: AppButtonStyles.base(
-                        backgroundColor: AppColors.black,
-                        foregroundColor: AppColors.f01,
-                        elevation: 4,
-                        shadowColor: Colors.black.withOpacity(0.25),
-                      ),
-                      child: Text(
-                        '앨범 생성하기',
-                        style: AppTextStyle.body16M120.copyWith(
-                          color: AppColors.f01,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              /// SVG 이미지
+              SvgPicture.asset(
+                'assets/system/dumy/main2.svg',
+                width: 270,
+                height: 270,
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+              Text(
+                '함께한 추억들을 정리해,\n또또와의 이야기를 만들어보세요',
+                textAlign: TextAlign.center,
+                style: AppTextStyleDahyun.dahyun(
+                  size: 24,
+                  weight: FontWeight.w400,
+                  height: 1.2,
+                ),
+              ),
+              const SizedBox(height: 40),
+              SizedBox(
+                width: 171,
+                height: 55,
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: AppButtonStyles.base(
+                    backgroundColor: AppColors.black,
+                    foregroundColor: AppColors.f01,
+                    elevation: 4,
+                    shadowColor: Colors.black.withOpacity(0.25),
+                  ),
+                  child: Text(
+                    '앨범 생성하기',
+                    style: AppTextStyle.body16M120.copyWith(
+                      color: AppColors.f01,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

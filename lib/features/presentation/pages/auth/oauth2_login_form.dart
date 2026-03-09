@@ -20,22 +20,17 @@ class Oauth2LoginPage extends ConsumerWidget {
           child: Column(
             children: [
               const Spacer(),
-
-              /// 👇 전체 영역
               Padding(
                 padding: const EdgeInsets.only(bottom: 60),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-
-                    // 로고
                     Image.asset(
                       'assets/system/logo/logo.png',
                       width: 120,
                       height: 120,
                       fit: BoxFit.contain,
                     ),
-
                     const SizedBox(height: 137),
 
                     // 카카오 로그인
@@ -51,17 +46,13 @@ class Oauth2LoginPage extends ConsumerWidget {
                         child: Row(
                           children: [
                             const SizedBox(width: 20),
-                            SvgPicture.asset("assets/system/icons/kakao_logo.svg",
-                              width: 32,
-                              height: 32,
-                            ),
+                            SvgPicture.asset("assets/system/icons/kakao_logo.svg", width: 32, height: 32),
                             const SizedBox(width: 58),
                             const Text('카카오 로그인 하기'),
                           ],
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 8),
 
                     // 구글 로그인
@@ -77,97 +68,55 @@ class Oauth2LoginPage extends ConsumerWidget {
                         child: Row(
                           children: [
                             const SizedBox(width: 20),
-                            SvgPicture.asset("assets/system/icons/google_logo.svg",
-                              width: 32,
-                              height: 32,
-                            ),
+                            SvgPicture.asset("assets/system/icons/google_logo.svg", width: 32, height: 32),
                             const SizedBox(width: 58),
                             const Text('구글 로그인 하기'),
                           ],
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 20),
 
-                    // 구분선
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const SizedBox(
-                          width: 60,
-                          child: Divider(
-                            thickness: 1.5),
-                        ),
+                        const SizedBox(width: 60, child: Divider(thickness: 1.5)),
                         const SizedBox(width: 8),
-                        Text(
-                          '또는',
-                          style: AppText.captionSecondary,
-                        ),
+                        Text('또는', style: AppText.captionSecondary),
                         const SizedBox(width: 8),
-                        const SizedBox(
-                          width: 60,
-                          child: Divider(
-                              thickness: 1.5),
-                        ),
+                        const SizedBox(width: 60, child: Divider(thickness: 1.5)),
                       ],
                     ),
-
                     const SizedBox(height: 20),
 
-                    // 애플 / 네이버
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         IconButton(
                           onPressed: () {},
                           icon: Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.black, // 여기 색 바꿔
-                            ),
+                            width: 60, height: 60,
+                            decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.black),
                             alignment: Alignment.center,
-                            child: SvgPicture.asset(
-                              "assets/system/icons/apple_logo.svg",
-                              width: 28,
-                              height: 28,
-                              colorFilter: const ColorFilter.mode(
-                                Colors.white,
-                                BlendMode.srcIn,
-                              ),
-                            ),
+                            child: SvgPicture.asset("assets/system/icons/apple_logo.svg", width: 28, height: 28,
+                                colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn)),
                           ),
                         ),
                         const SizedBox(width: 8),
                         IconButton(
                           onPressed: () {},
                           icon: Container(
-                            width: 60,
-                            height: 60,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color(0xFF03CF5D),
-                            ),
+                            width: 60, height: 60,
+                            decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF03CF5D)),
                             alignment: Alignment.center,
-                            child: SvgPicture.asset(
-                              "assets/system/icons/Naver_logo.svg",
-                              width: 28,
-                              height: 28,
-                              colorFilter: const ColorFilter.mode(
-                                Colors.white,
-                                BlendMode.srcIn,
-                              ),
-                            ),
+                            child: SvgPicture.asset("assets/system/icons/Naver_logo.svg", width: 28, height: 28,
+                                colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn)),
                           ),
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 32),
 
-                    // 하단 텍스트 버튼들
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -175,44 +124,25 @@ class Oauth2LoginPage extends ConsumerWidget {
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                builder: (_) => const SignUpPage(),
-                              ),
+                              MaterialPageRoute(builder: (_) => const SignUpPage()),
                             );
                           },
-                          child: Text(
-                            '회원가입',
-                            style: AppTextStyle.caption12R120.copyWith(
-                              color: AppColors.f04,
-                            ),
-                          ),
+                          child: Text('회원가입', style: AppTextStyle.caption12R120.copyWith(color: AppColors.f04)),
                         ),
                         const Text('|'),
                         TextButton(
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                builder: (_) => const IdLoginPage(),
-                              ),
+                              MaterialPageRoute(builder: (_) => const IdLoginPage()),
                             );
                           },
-                          child: Text(
-                            '아이디 로그인',
-                            style: AppTextStyle.caption12R120.copyWith(
-                              color: AppColors.f04,
-                            ),
-                          ),
+                          child: Text('아이디 로그인', style: AppTextStyle.caption12R120.copyWith(color: AppColors.f04)),
                         ),
                         const Text('|'),
                         TextButton(
                           onPressed: () {},
-                          child: Text(
-                            '문의하기',
-                            style: AppTextStyle.caption12R120.copyWith(
-                              color: AppColors.f04,
-                            ),
-                          ),
+                          child: Text('문의하기', style: AppTextStyle.caption12R120.copyWith(color: AppColors.f04)),
                         ),
                       ],
                     ),

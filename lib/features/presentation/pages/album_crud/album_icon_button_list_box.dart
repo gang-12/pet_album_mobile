@@ -6,17 +6,23 @@ import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/photo
 import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/sticker_search_bottom_sheet.dart';
 
 class EditorIconBar extends StatefulWidget {
+  final bool isTextMode;
   final VoidCallback? onDrawPressed;
   final VoidCallback? onBackgroundPressed;
   final VoidCallback? onSheetOpened;   // 모달 시트 열릴 때
   final VoidCallback? onSheetClosed;   // 모달 시트 닫힐 때
+  final VoidCallback? onTextPressed;
+  final VoidCallback? onTextClosed;
 
   const EditorIconBar({
     super.key,
+    this.isTextMode = false,
     this.onDrawPressed,
     this.onBackgroundPressed,
     this.onSheetOpened,
     this.onSheetClosed,
+    this.onTextPressed,
+    this.onTextClosed,
   });
 
   @override
@@ -44,7 +50,7 @@ class _EditorIconBarState extends State<EditorIconBar> {
           ),
         ],
       ),
-      child: _isTextMode ? _buildTextModeBar() : _buildMainBar(),
+      child: widget.isTextMode ? _buildTextModeBar() : _buildMainBar(),
     );
   }
 
@@ -87,9 +93,7 @@ class _EditorIconBarState extends State<EditorIconBar> {
         // 텍스트 모드 닫기 → 메인 바로 돌아가기
         GestureDetector(
           onTap: () {
-            setState(() {
-              _isTextMode = false;
-            });
+            widget.onTextClosed?.call();
           },
           child: SvgPicture.asset(
             'assets/system/icons/icon_close_big.svg',
@@ -143,9 +147,7 @@ class _EditorIconBarState extends State<EditorIconBar> {
   }
 
   void _onTextPushPressed() {
-    setState(() {
-      _isTextMode = true;
-    });
+    widget.onTextPressed?.call();
   }
 
   Future<void> _onStickerPressed(BuildContext context) async {

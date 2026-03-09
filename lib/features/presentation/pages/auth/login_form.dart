@@ -19,8 +19,6 @@ class _IdLoginPageState extends ConsumerState<IdLoginPage> {
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _isLoading = false;
-
 
   @override
   void dispose() {
@@ -33,10 +31,10 @@ class _IdLoginPageState extends ConsumerState<IdLoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const CommonBackAppBar(title: '로그인'),
+      appBar: CommonBackAppBar(title: '로그인'),
       resizeToAvoidBottomInset: true,
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 0), // 위 20 유지
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -45,24 +43,11 @@ class _IdLoginPageState extends ConsumerState<IdLoginPage> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  '아이디',
-                  style:AppTextStyle.body16M120.copyWith(
-                    color: AppColors.f03,
-                  ),
-                ),
+                Text('아이디', style: AppTextStyle.body16M120.copyWith(color: AppColors.f03)),
                 const SizedBox(height: 8),
-                AppTextField(
-                  controller: _idController,
-                  hintText: '아이디를 작성해 주세요.',
-                ),
+                AppTextField(controller: _idController, hintText: '아이디를 작성해 주세요.'),
                 const SizedBox(height: 20),
-                Text(
-                  '비밀번호',
-                  style: AppTextStyle.body16M120.copyWith(
-                    color: AppColors.f03,
-                  ),
-                ),
+                Text('비밀번호', style: AppTextStyle.body16M120.copyWith(color: AppColors.f03)),
                 const SizedBox(height: 8),
                 AppTextField(
                   controller: _passwordController,
@@ -70,25 +55,17 @@ class _IdLoginPageState extends ConsumerState<IdLoginPage> {
                   obscureText: _obscurePassword,
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off
-                          : Icons.visibility,
+                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
                       color: Colors.grey,
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
+                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ),
                 const SizedBox(height: 40),
                 ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                        builder: (context) => const MainShell(),
-                      ),
+                      MaterialPageRoute(builder: (context) => const MainShell()),
                           (route) => false,
                     );
                   },
@@ -106,56 +83,24 @@ class _IdLoginPageState extends ConsumerState<IdLoginPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const SizedBox(
-                        width: 60,
-                        child: Divider(
-                            thickness: 1.5),
-                      ),
+                      const SizedBox(width: 60, child: Divider(thickness: 1.5)),
                       const SizedBox(width: 8),
-                      Text(
-                        'SNS 로그인',
-                        style: AppText.captionSecondary,
-                      ),
+                      Text('SNS 로그인', style: AppText.captionSecondary),
                       const SizedBox(width: 8),
-                      const SizedBox(
-                        width: 60,
-                        child: Divider(
-                            thickness: 1.5),
-                      ),
+                      const SizedBox(width: 60, child: Divider(thickness: 1.5)),
                     ],
                   ),
                   const SizedBox(height: 20),
                   Row(
-                    mainAxisAlignment:
-                    MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _snsButton(
-                        asset:
-                        'assets/system/icons/kakao.png',
-                        onTap: () =>
-                            debugPrint('카카오 로그인'),
-                      ),
+                      _snsButton(asset: 'assets/system/icons/kakao.png', onTap: () => debugPrint('카카오 로그인')),
                       const SizedBox(width: 10),
-                      _snsButton(
-                        asset:
-                        'assets/system/icons/google.png',
-                        onTap: () =>
-                            debugPrint('구글 로그인'),
-                      ),
+                      _snsButton(asset: 'assets/system/icons/google.png', onTap: () => debugPrint('구글 로그인')),
                       const SizedBox(width: 10),
-                      _snsButton(
-                        asset:
-                        'assets/system/icons/apple.png',
-                        onTap: () =>
-                            debugPrint('애플 로그인'),
-                      ),
+                      _snsButton(asset: 'assets/system/icons/apple.png', onTap: () => debugPrint('애플 로그인')),
                       const SizedBox(width: 10),
-                      _snsButton(
-                        asset:
-                        'assets/system/icons/naver.png',
-                        onTap: () =>
-                            debugPrint('네이버 로그인'),
-                      ),
+                      _snsButton(asset: 'assets/system/icons/naver.png', onTap: () => debugPrint('네이버 로그인')),
                     ],
                   ),
                 ],
@@ -167,17 +112,10 @@ class _IdLoginPageState extends ConsumerState<IdLoginPage> {
     );
   }
 
-  Widget _snsButton({
-    required String asset,
-    required VoidCallback onTap,
-  }) {
+  Widget _snsButton({required String asset, required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
-      child: Image.asset(
-        asset,
-        width: 52,
-        height: 52,
-      ),
+      child: Image.asset(asset, width: 52, height: 52),
     );
   }
 }

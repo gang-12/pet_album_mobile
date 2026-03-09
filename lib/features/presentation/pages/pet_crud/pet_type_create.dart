@@ -20,7 +20,7 @@ class PetTypCreatePage extends StatelessWidget {
           children: const [
             SizedBox(height: 16),
             _TitleText(),
-            SizedBox(height: 120),
+            SizedBox(height: 80),
             _PetTypeRow(),
           ],
         ),
@@ -48,22 +48,25 @@ class _PetTypeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _PetTypeCard(
-            label: '강아지',
-            imagePath: 'assets/system/pet_character/dog/basic_dog/maltese.svg',
+    return SizedBox(
+      height: 220,
+      child: Row(
+        children: const [
+          Expanded(
+            child: _PetTypeCard(
+              label: '강아지',
+              imagePath: 'assets/system/icons/maltese.svg',
+            ),
           ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _PetTypeCard(
-            label: '고양이',
-            imagePath: 'assets/system/pet_character/cat/basic_cat/Orange_Tabby.svg',
+          SizedBox(width: 16),
+          Expanded(
+            child: _PetTypeCard(
+              label: '고양이',
+              imagePath: 'assets/system/icons/Orange_Tabby.svg',
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -89,36 +92,38 @@ class _PetTypeCard extends StatelessWidget {
         );
       },
       child: Container(
-        height: 207,
         decoration: BoxDecoration(
-          color: const Color(0xFFEEEEEE),
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: AppColors.gray01,
             width: 1,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              offset: const Offset(0, 4),
+              blurRadius: 12,
+            ),
+          ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(15),
+        child: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
+              SizedBox(
+                width: 152,
+                height: 146,
                 child: SvgPicture.asset(
                   imagePath,
-                  width: 142,
-                  height: 136,
                   fit: BoxFit.contain,
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyle.body16M120.copyWith(
-                    color: AppColors.f05,
-                  ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: AppTextStyle.body16M120.copyWith(
+                  color: AppColors.f05,
                 ),
               ),
             ],
