@@ -108,37 +108,33 @@ class _MyPageState extends State<MyPage> {
                   SizedBox(
                     width: 99,
                     height: 41,
-                    child:
-                    ElevatedButton(
+                    child: ElevatedButton(
                       style: AppButtonStyles.base(
                         backgroundColor: AppColors.white,
                         foregroundColor: AppColors.gray01,
                       ).copyWith(
-                        elevation: MaterialStateProperty.all(2), // 살짝 떠 있는 느낌
+                        elevation: MaterialStateProperty.all(2),
                         shadowColor: MaterialStateProperty.all(Colors.black.withOpacity(0.08)),
-
                         shape: MaterialStateProperty.all(
                           RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24), // pill 형태
+                            borderRadius: BorderRadius.circular(24),
                           ),
                         ),
-
                         padding: MaterialStateProperty.all(
-                          const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
+                          const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         ),
-
-                        side: MaterialStateProperty.all(BorderSide.none), // 테두리 제거
+                        side: MaterialStateProperty.all(BorderSide.none),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap, // ← 추가
                       ),
-                      onPressed: () {
-                        // 정보 수정 페이지 이동
-                      },
-                      child: Text(
-                        '내 정보 수정',
-                        style: AppTextStyle.description14R120.copyWith(
-                          color: AppColors.f05,
+                      onPressed: () {},
+                      child: FittedBox( // ← 추가
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          '내 정보 수정',
+                          style: AppTextStyle.description14R120.copyWith(
+                            color: AppColors.f05,
+                          ),
+                          maxLines: 1,
                         ),
                       ),
                     ),

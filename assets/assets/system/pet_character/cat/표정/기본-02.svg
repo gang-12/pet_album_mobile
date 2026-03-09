@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="cat" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 50.83 48.47">
+  <!-- Generator: Adobe Illustrator 29.8.2, SVG Export Plug-In . SVG Version: 2.1.1 Build 3)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: #231f20;
+      }
+    </style>
+  </defs>
+  <circle class="st0" cx="20.05" cy="22.91" r=".98"/>
+  <circle class="st0" cx="30.23" cy="22.91" r=".98"/>
+  <ellipse class="st0" cx="25.14" cy="24.03" rx=".88" ry=".55"/>
+</svg>

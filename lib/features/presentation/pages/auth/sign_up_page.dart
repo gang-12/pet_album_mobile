@@ -197,7 +197,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const Guardian_info_page(),
+                          builder: (_) => const GuardianInfoPage(),
                         ),
                       );
                     }

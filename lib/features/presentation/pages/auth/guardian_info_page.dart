@@ -6,19 +6,19 @@ import 'package:petAblumMobile/core/theme/app_custom_button.dart';
 import 'package:petAblumMobile/core/widgets/common_app_back_bar_scaffold.dart';
 import 'package:petAblumMobile/features/presentation/pages/auth/login_form.dart';
 
-class Guardian_info_page extends StatefulWidget {
-  const Guardian_info_page({super.key});
+class GuardianInfoPage extends StatefulWidget {
+  const GuardianInfoPage({super.key});
 
   @override
-  State<Guardian_info_page> createState() => _Guardian_info_pageState();
+  State<GuardianInfoPage> createState() => _GuardianInfoPageState();
 }
 
-class _Guardian_info_pageState extends State<Guardian_info_page> {
+class _GuardianInfoPageState extends State<GuardianInfoPage> {
   final _nicknameController = TextEditingController();
   final _addressDetailController = TextEditingController();
 
   String? _selectedGender;
-  String _address = '서울 구로구 디지털로 31길 62\n서울 구로구 구로동 197-11';
+  final String _address = "서울 구로구 디지털로 31길 62\n서울 구로구 구로동 197-11";
 
   @override
   void initState() {
@@ -189,7 +189,7 @@ class _Guardian_info_pageState extends State<Guardian_info_page> {
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (_) => const IdLoginPage()),
-                      (route) => false,
+                      (route) => route.isFirst,
                 );
               }
                   : null,

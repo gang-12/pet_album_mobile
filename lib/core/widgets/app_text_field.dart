@@ -12,6 +12,7 @@ class AppTextField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final Widget? prefixIcon;
   final FocusNode? focusNode;
+  final TextStyle? style;
 
   const AppTextField({
     super.key,
@@ -22,6 +23,7 @@ class AppTextField extends StatelessWidget {
     this.prefixIcon,
     this.suffixIcon,
     this.onChanged,
+    this.style,
   });
 
   @override
@@ -48,7 +50,7 @@ class AppTextField extends StatelessWidget {
                 controller: controller,
                 focusNode: focusNode,
                 obscureText: obscureText,
-                style: AppTextStyle.body16R120.copyWith(
+                style: style ?? AppTextStyle.body16R120.copyWith(
                   color: AppColors.f03,
                 ),
                 decoration: InputDecoration(

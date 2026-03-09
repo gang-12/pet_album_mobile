@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="dog" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 50.83 48.47">
+  <!-- Generator: Adobe Illustrator 29.8.2, SVG Export Plug-In . SVG Version: 2.1.1 Build 3)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: #231f20;
+      }
+
+      .st1 {
+        fill: #fff;
+        stroke: #231f20;
+        stroke-miterlimit: 10;
+        stroke-width: .5px;
+      }
+
+      .st2 {
+        fill: #2061ac;
+      }
+    </style>
+  </defs>
+  <ellipse class="st0" cx="26.38" cy="29.23" rx="1.89" ry="1.17" transform="translate(-.09 .08) rotate(-.17)"/>
+  <g>
+    <circle class="st2" cx="23.69" cy="14.45" r=".69"/>
+    <circle class="st2" cx="26.41" cy="14.45" r=".69"/>
+    <circle class="st2" cx="29.14" cy="14.45" r=".69"/>
+  </g>
+  <g>
+    <path class="st1" d="M23.54,27.99c0,.5-.88.9-1.97.9s-1.97-.4-1.97-.9,1.01-.55,2.1-.55,1.84.05,1.84.55Z"/>
+    <path class="st0" d="M22.41,27.7c0,.43-.35.77-.77.77s-.77-.35-.77-.77.35-.32.77-.32.77-.11.77.32Z"/>
+  </g>
+  <g>
+    <path class="st1" d="M33.49,27.99c0,.5-.88.9-1.97.9s-1.97-.4-1.97-.9,1.01-.55,2.1-.55,1.84.05,1.84.55Z"/>
+    <path class="st0" d="M32.36,27.7c0,.43-.35.77-.77.77s-.77-.35-.77-.77.35-.32.77-.32.77-.11.77.32Z"/>
+  </g>
+</svg>
