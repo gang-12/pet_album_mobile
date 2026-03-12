@@ -180,7 +180,20 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
             ),
           ),
 
-          if (_isDrawingMode || _current.drawingPoints.isNotEmpty)
+          // 그린 획 표시 (항상)
+          if (_current.drawingPoints.isNotEmpty)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: CustomPaint(
+                  painter: DrawingPainter(
+                    drawingPoints: _current.drawingPoints,
+                  ),
+                ),
+              ),
+            ),
+
+          // 그리기 터치 입력 (드로잉 모드일 때만)
+          if (_isDrawingMode)
             Positioned.fill(
               child: GestureDetector(
                 onPanStart: (details) {
@@ -189,6 +202,7 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
                       ..._current.drawingPoints,
                       DrawingPoint(
                         offset: details.localPosition,
+                        lineStyle: currentLineStyle,
                         paint: Paint()
                           ..color = currentColor
                           ..strokeWidth = currentLineWidth
@@ -205,6 +219,7 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
                         ..._current.drawingPoints,
                         DrawingPoint(
                           offset: details.localPosition,
+                          lineStyle: currentLineStyle,
                           paint: Paint()
                             ..color = currentColor
                             ..strokeWidth = currentLineWidth
@@ -225,7 +240,6 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
                 child: CustomPaint(
                   painter: DrawingPainter(
                     drawingPoints: _current.drawingPoints,
-                    lineStyle: currentLineStyle,
                   ),
                 ),
               ),
@@ -529,18 +543,19 @@ class EditorState {
 class DrawingPoint {
   final Offset offset;
   final Paint paint;
+  final String lineStyle;
 
-  DrawingPoint({required this.offset, required this.paint});
+  DrawingPoint({
+    required this.offset,
+    required this.paint,
+    this.lineStyle = '실선',
+  });
 }
 
 class DrawingPainter extends CustomPainter {
   final List<DrawingPoint?> drawingPoints;
-  final String lineStyle;
 
-  DrawingPainter({
-    required this.drawingPoints,
-    this.lineStyle = '실선',
-  });
+  DrawingPainter({required this.drawingPoints});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -548,8 +563,11 @@ class DrawingPainter extends CustomPainter {
       if (drawingPoints[i] != null && drawingPoints[i + 1] != null) {
         final point1 = drawingPoints[i]!;
         final point2 = drawingPoints[i + 1]!;
+        final style = point1.lineStyle; // 각 획의 스타일 사용
 
-        if (lineStyle == '점선') {
+        if (style == '점선') {
+          _drawDottedLine(canvas, point1.offset, point2.offset, point1.paint);
+        } else if (style == '파선') {
           _drawDashedLine(canvas, point1.offset, point2.offset, point1.paint);
         } else {
           canvas.drawLine(point1.offset, point2.offset, point1.paint);
@@ -558,33 +576,47 @@ class DrawingPainter extends CustomPainter {
     }
   }
 
+  // 파선 (두께 반영)
   void _drawDashedLine(Canvas canvas, Offset p1, Offset p2, Paint paint) {
-    const dashWidth = 5.0;
-    const dashSpace = 3.0;
+    final strokeW = paint.strokeWidth;
+    final dashWidth = strokeW * 4;
+    final dashSpace = strokeW * 2;
 
     final distance = (p2 - p1).distance;
     if (distance == 0) return;
 
-    final normalizedDirection = Offset(
-      (p2.dx - p1.dx) / distance,
-      (p2.dy - p1.dy) / distance,
-    );
-
-    double currentDistance = 0.0;
-    while (currentDistance < distance) {
-      final start = Offset(
-        p1.dx + normalizedDirection.dx * currentDistance,
-        p1.dy + normalizedDirection.dy * currentDistance,
-      );
-      currentDistance += dashWidth;
-
+    final dir = Offset((p2.dx - p1.dx) / distance, (p2.dy - p1.dy) / distance);
+    double d = 0.0;
+    while (d < distance) {
+      final start = Offset(p1.dx + dir.dx * d, p1.dy + dir.dy * d);
+      d += dashWidth;
       final end = Offset(
-        p1.dx + normalizedDirection.dx * currentDistance.clamp(0, distance),
-        p1.dy + normalizedDirection.dy * currentDistance.clamp(0, distance),
+        p1.dx + dir.dx * d.clamp(0, distance),
+        p1.dy + dir.dy * d.clamp(0, distance),
       );
-
       canvas.drawLine(start, end, paint);
-      currentDistance += dashSpace;
+      d += dashSpace;
+    }
+  }
+
+  // 점선 (두께 반영: dotRadius = strokeWidth / 2)
+  void _drawDottedLine(Canvas canvas, Offset p1, Offset p2, Paint paint) {
+    final dotRadius = paint.strokeWidth / 2;
+    final dotGap = paint.strokeWidth * 2;
+
+    final distance = (p2 - p1).distance;
+    if (distance == 0) return;
+
+    final dir = Offset((p2.dx - p1.dx) / distance, (p2.dy - p1.dy) / distance);
+    final dotPaint = Paint()
+      ..color = paint.color
+      ..style = PaintingStyle.fill;
+
+    double d = 0.0;
+    while (d < distance) {
+      final point = Offset(p1.dx + dir.dx * d, p1.dy + dir.dy * d);
+      canvas.drawCircle(point, dotRadius, dotPaint);
+      d += dotRadius * 2 + dotGap;
     }
   }
 

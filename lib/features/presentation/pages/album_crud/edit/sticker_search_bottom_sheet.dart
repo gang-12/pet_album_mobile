@@ -39,6 +39,7 @@ class _StickerBottomSheetState extends State<StickerBottomSheet>
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
+  final DraggableScrollableController _sheetController = DraggableScrollableController();
 
   final List<String> _categories = ['전체', '문자', '장난감', '데코', '음식', '자연'];
 
@@ -91,6 +92,17 @@ class _StickerBottomSheetState extends State<StickerBottomSheet>
     super.initState();
     _tabController = TabController(length: _categories.length, vsync: this);
     _tabController.addListener(() => setState(() {}));
+
+    // 검색창 포커스 시 80%로 확장
+    _focusNode.addListener(() {
+      if (_focusNode.hasFocus) {
+        _sheetController.animateTo(
+          0.8,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   @override
@@ -98,6 +110,7 @@ class _StickerBottomSheetState extends State<StickerBottomSheet>
     _tabController.dispose();
     _searchController.dispose();
     _focusNode.dispose();
+    _sheetController.dispose();
     super.dispose();
   }
 
@@ -111,11 +124,23 @@ class _StickerBottomSheetState extends State<StickerBottomSheet>
     final double initialHeight = 400.0;
 
     return DraggableScrollableSheet(
+      controller: _sheetController,
       initialChildSize: initialHeight / screenHeight,
       minChildSize: initialHeight / screenHeight,
-      maxChildSize: 0.92,
+      maxChildSize: 0.8,
       expand: true,
       builder: (context, scrollController) {
+        // 스크롤 시작 시 80%로 확장
+        scrollController.addListener(() {
+          if (scrollController.offset > 0 &&
+              _sheetController.size < 0.8) {
+            _sheetController.animateTo(
+              0.8,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
+        });
         return Container(
           decoration: BoxDecoration(
             color: Colors.white,

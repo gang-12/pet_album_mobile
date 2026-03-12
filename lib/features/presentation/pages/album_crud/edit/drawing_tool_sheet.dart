@@ -321,67 +321,133 @@ class _LineStylePainter extends CustomPainter {
     final double endX = size.width;
 
     switch (style) {
+
+    // ================= 실선 =================
       case '실선':
-        canvas.drawLine(Offset(startX, y), Offset(endX, y), paint);
+        paint
+          ..strokeWidth = 3
+          ..style = PaintingStyle.stroke;
+
+        canvas.drawLine(
+          Offset(startX, y),
+          Offset(endX, y),
+          paint,
+        );
         break;
 
+
+    // ================= 점선 =================
       case '점선':
-        paint.strokeWidth = 2;
-        const double dotSize = 3;
-        const double gap = 6;
+        paint
+          ..strokeWidth = 2
+          ..style = PaintingStyle.fill;
+
+        const double dotSize = 4;
+        const double gap = 10;
+
         double x = startX;
+
         while (x < endX) {
           canvas.drawCircle(
-              Offset(x, y), dotSize / 2, paint..style = PaintingStyle.fill);
+            Offset(x, y),
+            dotSize / 2,
+            paint,
+          );
+
           x += dotSize + gap;
         }
+
         paint.style = PaintingStyle.stroke;
         break;
 
+
+    // ================= 파선 =================
       case '파선':
-        const double dashWidth = 12;
-        const double dashGap = 6;
+        paint
+          ..strokeWidth = 3
+          ..style = PaintingStyle.stroke;
+
+        const double dashWidth = 18;
+        const double dashGap = 8;
+
         double x = startX;
+
         while (x < endX) {
           canvas.drawLine(
             Offset(x, y),
-            Offset((x + dashWidth).clamp(startX, endX), y),
+            Offset(
+              (x + dashWidth).clamp(startX, endX),
+              y,
+            ),
             paint,
           );
+
           x += dashWidth + dashGap;
         }
         break;
 
+
+    // ================= 물결선 =================
       case '물결선':
+        paint
+          ..strokeWidth = 3
+          ..style = PaintingStyle.stroke;
+
         final path = Path();
+
         path.moveTo(startX, y);
+
         double x = startX;
         bool up = true;
+
+        const double waveWidth = 16;
+        const double waveHeight = 6;
+
         while (x < endX) {
           path.quadraticBezierTo(
-            x + 5, up ? y - 5 : y + 5,
-            x + 10, y,
+            x + waveWidth / 2,
+            up ? y - waveHeight : y + waveHeight,
+            x + waveWidth,
+            y,
           );
-          x += 10;
+
+          x += waveWidth;
           up = !up;
         }
+
         canvas.drawPath(path, paint);
         break;
 
+
+    // ================= 지그재그 =================
       case '지그재그':
+        paint
+          ..strokeWidth = 3
+          ..style = PaintingStyle.stroke;
+
         final path = Path();
+
         path.moveTo(startX, y);
+
         double x = startX;
         bool upZ = true;
+
+        const double zigWidth = 12;
+        const double zigHeight = 6;
+
         while (x < endX) {
-          path.lineTo(x + 8, upZ ? y - 5 : y + 5);
-          x += 8;
+          path.lineTo(
+            x + zigWidth,
+            upZ ? y - zigHeight : y + zigHeight,
+          );
+
+          x += zigWidth;
           upZ = !upZ;
         }
+
         canvas.drawPath(path, paint);
         break;
-    }
-  }
+    }  }
 
   @override
   bool shouldRepaint(covariant _LineStylePainter oldDelegate) =>

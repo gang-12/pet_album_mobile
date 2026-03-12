@@ -192,3 +192,19 @@
 - 
 - album_page
 - '선택' 텍스트 버튼 터치 영역 수정
+
+# 2026-03-12-수정사항
+- sticker_search_bottom_sheet
+- 아이콘 검색, 스크롤 시 바텀 시트 영역 전체화면의 80%로 확장되도록 수정
+- 
+- drawing_tool_sheet
+- x아이콘, v아이콘 클릭 시 Navigator.pop() → widget.onClose() 로 변경
+- 선 종류 통일 (실선 / 점선 / 파선)
+- 
+- album_edit_form
+- DrawingPoint에 lineStyle 필드 추가
+- 선 스타일 변경 후 그리는 획부터만 새 스타일 적용, 이전 획 유지
+- 점선 두께 반영: dotRadius / dotGap을 strokeWidth 기준으로 변경
+- 파선 두께 반영: dashWidth / dashSpace를 strokeWidth 기준으로 변경
+- 그리기 터치 영역 / 획 표시 레이어 분리
+- x/v 클릭 시 드로잉 모드 비활성화
