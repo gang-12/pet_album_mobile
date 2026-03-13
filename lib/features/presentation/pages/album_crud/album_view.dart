@@ -1,18 +1,103 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:petAblumMobile/core/theme/app_colors.dart';
 import 'package:petAblumMobile/core/theme/app_fonts_style_suit.dart';
 import 'package:petAblumMobile/features/presentation/pages/album/album_menu_board_sheet.dart';
+import 'package:petAblumMobile/features/presentation/pages/album_crud/album_edit_form.dart';
 
 class AlbumViewPage extends StatefulWidget {
-  const AlbumViewPage({super.key});
+  final Map<String, String> album;
+  final VoidCallback? onBookmarkToggle;
+  final VoidCallback? onCopy;
+  final VoidCallback? onDelete;
+
+  const AlbumViewPage({
+    super.key,
+    required this.album,
+    this.onBookmarkToggle,
+    this.onCopy,
+    this.onDelete,
+  });
 
   @override
   State<AlbumViewPage> createState() => _AlbumPageState();
 }
 
 class _AlbumPageState extends State<AlbumViewPage> {
-  bool _isBookmarked = false;
+  late bool _isBookmarked;
+
+  @override
+  void initState() {
+    super.initState();
+    _isBookmarked = widget.album['isBookmarked'] == 'true';
+  }
+
+  String get _title => widget.album['title'] ?? '';
+  String get _imageUrl => widget.album['imageUrl'] ?? '';
+
+  // 공유: 클립보드 복사 + 토스트 SnackBar
+  void _handleShare() {
+    final link = 'petalbum://album/${widget.album['id'] ?? ''}';
+    Clipboard.setData(ClipboardData(text: link));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '링크가 복사되었습니다.',
+          style: AppTextStyle.description14M120.copyWith(
+            color: const Color(0xFFFFFFFF),
+          ),
+        ),
+        backgroundColor: const Color(0xB3424242),
+        behavior: SnackBarBehavior.floating,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        margin: const EdgeInsets.symmetric(horizontal: 30, vertical: 17),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  // 삭제 확인 팝업
+  void _handleDelete() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          '앨범 삭제',
+          style: AppTextStyle.subtitle20M120.copyWith(color: AppColors.f05),
+        ),
+        content: Text(
+          '"$_title" 앨범을 삭제하시겠습니까?',
+          style: AppTextStyle.body16R120.copyWith(color: AppColors.f03),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext), // 취소: 팝업만 닫기
+            child: Text(
+              '취소',
+              style: AppTextStyle.body16R120.copyWith(color: AppColors.f03),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext); // 팝업 닫기
+              widget.onDelete?.call();      // 앨범 목록에서 삭제
+              Navigator.pop(context);       // 뷰 페이지 닫기
+            },
+            child: Text(
+              '삭제',
+              style: AppTextStyle.body16R120.copyWith(color: AppColors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,13 +107,15 @@ class _AlbumPageState extends State<AlbumViewPage> {
         children: [
           // 배경 이미지
           Positioned.fill(
-            child: Image.asset(
-              'assets/system/dumy/dumy01.jpg',
+            child: _imageUrl.isNotEmpty
+                ? Image.asset(
+              _imageUrl,
               fit: BoxFit.cover,
-            ),
+            )
+                : const ColoredBox(color: AppColors.gray01),
           ),
 
-          // 상단 앱바 (높이 106px)
+          // 상단 앱바
           Positioned(
             top: 0,
             left: 0,
@@ -43,9 +130,9 @@ class _AlbumPageState extends State<AlbumViewPage> {
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // 정중앙 타이틀 (텍스트 길이 상관없이 항상 중앙)
+                      // 정중앙 타이틀
                       Text(
-                        '산책 모음집',
+                        _title,
                         style: AppTextStyle.subtitle20M120.copyWith(
                           color: AppColors.f05,
                         ),
@@ -75,21 +162,31 @@ class _AlbumPageState extends State<AlbumViewPage> {
                           onTap: () {
                             MenuBottomSheet.show(
                               context: context,
-                              petName: '산책 모음집',
-                              onEdit: () {},
-                              onCopy: () {},
-                              onShare: () {},
+                              petName: _title,
+                              onEdit: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const AlbumEditFormPage(),
+                                  ),
+                                );
+                              },
+                              onCopy: () {
+                                // 복사 후 앨범 페이지로 이동
+                                widget.onCopy?.call();
+                                Navigator.pop(context);
+                              },
+                              onShare: _handleShare,
                               isBookmarked: _isBookmarked,
                               onBookmark: () {
-                                setState(() {
-                                  _isBookmarked = !_isBookmarked;
-                                });
+                                setState(() => _isBookmarked = !_isBookmarked);
+                                widget.onBookmarkToggle?.call();
                               },
-                              onDelete: () {},
+                              onDelete: _handleDelete,
                             );
                           },
                           child: SvgPicture.asset(
-                            'assets/system/icons/icon_more.svg',
+                            'assets/system/icons/icon_kebab_menu.svg',
                             width: 24,
                             height: 24,
                             colorFilter: ColorFilter.mode(
@@ -111,7 +208,14 @@ class _AlbumPageState extends State<AlbumViewPage> {
             right: 20,
             bottom: 56,
             child: GestureDetector(
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AlbumEditFormPage(),
+                  ),
+                );
+              },
               child: Container(
                 width: 48,
                 height: 48,

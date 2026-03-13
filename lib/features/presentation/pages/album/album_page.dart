@@ -8,6 +8,7 @@ import 'package:petAblumMobile/features/presentation/pages/album/album_grid_item
 import 'package:petAblumMobile/features/presentation/pages/album/album_common_actions.dart';
 import 'package:petAblumMobile/features/presentation/pages/album/album_search_page.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/album_edit_form.dart';
+import 'package:petAblumMobile/features/presentation/pages/album_crud/album_view.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/album_create_sheet.dart';
 
 class AlbumPage extends StatefulWidget {
@@ -128,17 +129,14 @@ class _AlbumPageState extends State<AlbumPage> {
                       final album = filteredAlbums[index];
                       final id = album['id']!;
                       return AlbumGridItem(
+                        album: album,
                         title: album['title']!,
                         imageUrl: album['imageUrl']!,
                         isBookmarked: album['isBookmarked'] == 'true',
                         isSelectMode: _isSelectMode,
                         isSelected: _selectedIds.contains(id),
                         onSelectTap: () => _toggleSelection(id),
-                        onTap: () => _handleMenuTap(
-                          album['title']!,
-                          id,
-                          album['isBookmarked'] == 'true',
-                        ),
+                        onTap: () => _handleMenuTap(album['title']!, id, album['isBookmarked'] == 'true'),
                       );
                     },
                   );
@@ -303,6 +301,20 @@ class _AlbumPageState extends State<AlbumPage> {
               BlendMode.srcIn,
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  void _navigateToView(Map<String, String> album, String id) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AlbumViewPage(
+          album: album,
+          onBookmarkToggle: () => _toggleBookmark(id),
+          onCopy: () => _duplicateAlbum(id),
+          onDelete: () => _handleDelete(id, album['title']!),
         ),
       ),
     );

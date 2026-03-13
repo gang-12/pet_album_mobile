@@ -4,7 +4,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
 import 'package:petAblumMobile/core/theme/app_fonts_style_suit.dart';
 import 'package:petAblumMobile/core/theme/app_colors.dart';
-import 'package:petAblumMobile/features/presentation/pages/album_crud/album_edit_form.dart';
 
 class MenuBottomSheet extends StatelessWidget {
   final String petName;
@@ -64,12 +63,8 @@ class MenuBottomSheet extends StatelessWidget {
               svgPath: 'assets/system/icons/icon_edit.svg',
               label: '편집',
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const AlbumEditFormPage(),
-                  ),
-                );
+                Navigator.pop(context);
+                onEdit();
               },
             ),
             _MenuItem(
@@ -169,8 +164,7 @@ class _MenuItem extends StatelessWidget {
               height: 24,
               colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
             ),
-            const SizedBox(width: 16),
-            Text(
+            const SizedBox(width: 16),Text(
               label,
               style: AppTextStyle.body16R120.copyWith(color: color),
             ),
@@ -178,5 +172,6 @@ class _MenuItem extends StatelessWidget {
         ),
       ),
     );
+
   }
 }

@@ -9,6 +9,7 @@ class AlbumGridItem extends StatelessWidget {
   final String imageUrl;
   final String title;
   final bool isBookmarked;
+  final Map<String, String> album; // 뷰 페이지 전달용
   final VoidCallback? onTap;       // kebab 메뉴 → 바텀시트 호출
   final bool isSelectMode;         // 선택 모드 여부
   final bool isSelected;           // 선택됨 여부
@@ -19,6 +20,7 @@ class AlbumGridItem extends StatelessWidget {
     required this.imageUrl,
     required this.title,
     required this.isBookmarked,
+    required this.album,
     this.onTap,
     this.isSelectMode = false,
     this.isSelected = false,
@@ -66,7 +68,7 @@ class AlbumGridItem extends StatelessWidget {
                   : () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const AlbumViewPage(),
+                  builder: (_) => AlbumViewPage(album: album),
                 ),
               ),
               child: Container(

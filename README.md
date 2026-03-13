@@ -208,3 +208,41 @@
 - 파선 두께 반영: dashWidth / dashSpace를 strokeWidth 기준으로 변경
 - 그리기 터치 영역 / 획 표시 레이어 분리
 - x/v 클릭 시 드로잉 모드 비활성화
+
+# 2026-03-13-수정사항
+- album_view.dart
+- album 데이터 파라미터 연결 (타이틀, 이미지, 북마크)
+- 더보기 버튼 아이콘 수정
+- 더보기 버튼 편집/복사/북마크/삭제 연결
+- 편집 버튼 AlbumEditFormPage 이동 연결
+- onDelete 콜백 호출 후 뷰 페이지만 닫도록 수정
+- 
+- album_page.dart
+- _navigateToView 추가, AlbumGridItem onTap 연결
+- AlbumGridItem에 album 파라미터 추가
+- 
+- album_search_page.dart
+- AlbumGridItem에 album 파라미터 추가
+- 
+- album_grid_item.dart
+- album 파라미터 추가, AlbumViewPage에 전달
+- 
+- album_menu_board_sheet
+- 편집 Navigator.pop 후 onEdit() 콜백으로 변경
+- 
+- background_template_sheet 
+- 사진 추가 선택 시 단일 선택 사진 시트 연결하도록 수정
+- 기존 PhotoGalleryBottomSheet 유지
+- 
+- PhotoGallerySingleBottomSheet 추가
+- 사진 단일 선택 전용 gallery_sheet
+- 아이콘 변경
+- 드롭다운 바 추가
+
+
+## 바텀시트 기능을 전 페이지에서 동일하게 동작하도록 통일 요청
+- 현재 앨범 더보기(바텀시트) 기능이 페이지마다 따로 동작하여 한 페이지에서 변경한 상태(북마크 등)가 다른 페이지에 반영되지 않습니다.
+- 요청사항:
+* 앨범 바텀시트 기능을 공통 로직으로 통합
+* 어떤 페이지에서 상태를 변경해도 모든 페이지에 동일하게 반영되도록 수정
+* 예) view에서 북마크 → album_page / 리스트 / 상세 / 더보기 모두 동일 적용

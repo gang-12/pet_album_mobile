@@ -5,6 +5,7 @@ import 'package:petAblumMobile/core/theme/app_colors.dart';
 import 'package:petAblumMobile/core/theme/app_fonts_style_suit.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/color_select_scale.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/photo_gallery_sheet.dart';
+import 'photo_gallery_single_sheet.dart';
 
 class BackgroundTabletPanel extends StatefulWidget {
   final VoidCallback onClose;
@@ -39,12 +40,13 @@ class _BackgroundTabletPanelState extends State<BackgroundTabletPanel> {
   }
 
   Future<void> _openPhotoGallery() async {
-    final selectedPhotos = await PhotoGalleryBottomSheet.show(context);
-    if (selectedPhotos != null && selectedPhotos.isNotEmpty) {
-      // TODO: 선택된 사진 처리
+    final selectedPhoto =
+    await PhotoGallerySingleBottomSheet.show(context);
+
+    if (selectedPhoto != null) {
+      // TODO 처리
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(

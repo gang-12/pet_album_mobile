@@ -202,6 +202,7 @@ class _AlbumSearchState extends State<AlbumSearch> {
           itemBuilder: (context, index) {
             final album = list[index];
             return AlbumGridItem(
+              album: album,
               title: album['title']!,
               imageUrl: album['imageUrl']!,
               isBookmarked: album['isBookmarked'] == 'true',
