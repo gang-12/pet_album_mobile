@@ -4,6 +4,9 @@ import 'package:petAblumMobile/core/theme/app_colors.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/color_select_scale.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/photo_gallery_sheet.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/sticker_search_bottom_sheet.dart';
+import 'package:petAblumMobile/features/presentation/pages/album_crud/text_edit/text_style_sheet.dart';
+
+import '../../../../core/theme/app_fonts_style_suit.dart';
 
 class EditorIconBar extends StatefulWidget {
   final bool isTextMode;
@@ -22,7 +25,7 @@ class EditorIconBar extends StatefulWidget {
     this.onSheetOpened,
     this.onSheetClosed,
     this.onTextPressed,
-    this.onTextClosed,
+    this.onTextClosed, required Null Function() onTextStylePressed,
   });
 
   @override
@@ -108,11 +111,7 @@ class _EditorIconBarState extends State<EditorIconBar> {
         const SizedBox(width: 20),
         _buildIconButton('assets/system/icons/text_edit_select_font.svg', _onFontPressed),
         const SizedBox(width: 20),
-        _buildIconButton('assets/system/icons/text_edit_impact.svg', _onColorPressed),
-        const SizedBox(width: 20),
         _buildIconButton('assets/system/icons/text_edit_middle.svg', _onAlignPressed),
-        const SizedBox(width: 20),
-        _buildIconButton('assets/system/icons/text_edit_italic.svg', _onItalicPressed),
         const SizedBox(width: 20),
         _buildIconButton('assets/system/icons/text_edit_underline.svg', _onUnderlinePressed),
         const SizedBox(width: 20),
@@ -160,9 +159,32 @@ class _EditorIconBarState extends State<EditorIconBar> {
   }
 
   // 텍스트 모드 액션들
-  void _onFontPressed() => print('폰트 변경');
+  void _onFontPressed() {
+    String _selectedFontFamily = 'Pretendard';
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.transparent,
+      isDismissible: true,
+      enableDrag: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.4,
+        minChildSize: 0.3,
+        maxChildSize: 0.6,
+        builder: (context, scrollController) => TextStylePanel(
+          selectedFontFamily: _selectedFontFamily,
+          onTextFamilyChanged: (fontFamily) {
+            setState(() {
+              _selectedFontFamily = fontFamily;
+            });
+          },
+          onClose: () => Navigator.pop(context),
+        ),
+      ),
+    );
+  }
   void _onAlignPressed() => print('정렬 변경');
-  void _onItalicPressed() => print('이탤릭 토글');
   void _onUnderlinePressed() => print('밑줄 토글');
 
   void _onColorPressed() async {
@@ -194,32 +216,57 @@ class _EditorIconBarState extends State<EditorIconBar> {
               ),
             ],
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 핸들바
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 12),
-                  width: 54,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.gray03,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 핸들바: x / 색상 / v
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: SvgPicture.asset(
+                        'assets/system/icons/icon_close_big.svg',
+                        width: 24,
+                        height: 24,
+                        colorFilter: const ColorFilter.mode(
+                          AppColors.f05,
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          '색상',
+                          style: AppTextStyle.description14R120,
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context, selectedColor),
+                      child: SvgPicture.asset(
+                        'assets/system/icons/icon_check.svg',
+                        width: 24,
+                        height: 24,
+                        colorFilter: const ColorFilter.mode(
+                          AppColors.f05,
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
-                child: ColorSelectorSection(
+                const SizedBox(height: 20),
+                ColorSelectorSection(
                   selectedColor: selectedColor,
                   onChanged: (color) {
                     Navigator.pop(context, color);
                   },
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -231,7 +278,6 @@ class _EditorIconBarState extends State<EditorIconBar> {
       });
     }
   }
-
   Widget _buildColorButton(Color color) {
     final isSelected = selectedColor == color;
     return GestureDetector(

@@ -246,3 +246,31 @@
 * 앨범 바텀시트 기능을 공통 로직으로 통합
 * 어떤 페이지에서 상태를 변경해도 모든 페이지에 동일하게 반영되도록 수정
 * 예) view에서 북마크 → album_page / 리스트 / 상세 / 더보기 모두 동일 적용
+
+# 2026-03-16-수정사항
+- Impact.ttf 폰트 추가
+- MemomentKkukkukk.ttf 폰트 추가
+- Pretendard-ExtraBold.otf 폰트 추가
+- Pretendard-Regular.otf 폰트 추가
+- Soap Regular.ttf 폰트 추가
+- 
+- text_style_sheet 추가
+
+
+# 2026-03-17-수정사항
+- text_edit_button_list_box
+- import 수정
+- 
+- text_style_sheet
+- FontItem 크기 수정
+- 패딩값 전체 수정
+- 
+- album_view
+- 더보기 - 삭제 팝업 창 수정 및 delete_modal 연결
+- 
+- album_icon_button_list_box
+- 텍스트 색상 변경 시트 핸들바 수정 
+- onFontPressed를 text_style_sheet 연결
+- 
+- Album edit form
+- 

@@ -71,6 +71,26 @@ flutter:
       fonts:
         - asset: assets/fonts/온글잎 박다현체.ttf
 
+    - family: Pretendard
+      fonts:
+        - asset: assets/fonts/Pretendard/Pretendard-Regular.otf
+        - weight: 400
+        - asset: assets/fonts/Pretendard/Pretendard-ExtraBold.otf
+          weight: 700
+
+    - family: Impact
+      fonts:
+        - asset: assets/fonts/Impact.ttf
+
+    - family: Soap
+      fonts:
+        - asset: assets/fonts/Soap.ttf
+
+    - family: MemomentKkukkukk
+      fonts:
+        - asset: assets/fonts/MemomentKkukkukk.ttf
+
+
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

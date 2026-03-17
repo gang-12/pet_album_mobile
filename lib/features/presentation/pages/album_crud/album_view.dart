@@ -5,6 +5,8 @@ import 'package:petAblumMobile/core/theme/app_colors.dart';
 import 'package:petAblumMobile/core/theme/app_fonts_style_suit.dart';
 import 'package:petAblumMobile/features/presentation/pages/album/album_menu_board_sheet.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/album_edit_form.dart';
+import 'package:petAblumMobile/core/widgets/delete_modal.dart';
+
 
 class AlbumViewPage extends StatefulWidget {
   final Map<String, String> album;
@@ -62,43 +64,16 @@ class _AlbumPageState extends State<AlbumViewPage> {
 
   // 삭제 확인 팝업
   void _handleDelete() {
-    showDialog(
+    DeleteConfirmDialog.show(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          '앨범 삭제',
-          style: AppTextStyle.subtitle20M120.copyWith(color: AppColors.f05),
-        ),
-        content: Text(
-          '"$_title" 앨범을 삭제하시겠습니까?',
-          style: AppTextStyle.body16R120.copyWith(color: AppColors.f03),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext), // 취소: 팝업만 닫기
-            child: Text(
-              '취소',
-              style: AppTextStyle.body16R120.copyWith(color: AppColors.f03),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext); // 팝업 닫기
-              widget.onDelete?.call();      // 앨범 목록에서 삭제
-              Navigator.pop(context);       // 뷰 페이지 닫기
-            },
-            child: Text(
-              '삭제',
-              style: AppTextStyle.body16R120.copyWith(color: AppColors.red),
-            ),
-          ),
-        ],
-      ),
+      title: '앨범 삭제',
+      content: '"$_title" 앨범을 삭제하시겠습니까?',
+      onConfirm: () {
+        widget.onDelete?.call();  // 앨범 목록에서 삭제
+        Navigator.pop(context);   // 뷰 페이지 닫기
+      },
     );
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

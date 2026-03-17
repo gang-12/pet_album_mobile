@@ -7,6 +7,7 @@ import 'package:petAblumMobile/features/presentation/pages/album_crud/album_icon
 import 'package:dotted_border/dotted_border.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/background_template_sheet.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/drawing_tool_sheet.dart';
+import 'package:petAblumMobile/features/presentation/pages/album_crud/text_edit/text_style_sheet.dart';
 
 
 class AlbumEditFormPage extends StatefulWidget {
@@ -22,6 +23,8 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
   bool _showDrawingPanel = false;
   bool _showModalSheet = false;
   bool _isDrawingMode = false;
+  bool _showTextStylePanel = false;
+  String currentTextFamily = 'Pretendard';
   int? _selectedTextIndex;
   final List<_CanvasText> _canvasTexts = [];
 
@@ -79,7 +82,10 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
   void _onTextConfirmed() {
     if (_textInputController.text.isNotEmpty) {
       setState(() {
-        _canvasTexts.add(_CanvasText(text: _textInputController.text));
+        _canvasTexts.add(_CanvasText(
+          text: _textInputController.text,
+          fontFamily: currentTextFamily,
+        ));
         _selectedTextIndex = _canvasTexts.length - 1;
       });
     }
@@ -306,7 +312,11 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
                         ),
                         child: Text(
                           item.text,
-                          style: TextStyle(fontSize: item.fontSize, color: Colors.black),
+                          style: TextStyle(
+                            fontSize: item.fontSize,
+                            color: Colors.black,
+                            fontFamily: item.fontFamily,
+                          ),
                         ),
                       ),
                       if (isSelected)
@@ -357,6 +367,28 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
               ),
             );
           }),
+          // 5-1. 폰트 스타일 패널
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+            left: 0, right: 0,
+            bottom: _showTextStylePanel ? 0 : -500,
+            child: TextStylePanel(
+              selectedFontFamily: currentTextFamily,
+              onTextFamilyChanged: (family) {
+                setState(() {
+                  currentTextFamily = family;
+                  // 선택된 텍스트가 있으면 해당 텍스트 폰트도 즉시 변경
+                  if (_selectedTextIndex != null &&
+                      _selectedTextIndex! < _canvasTexts.length) {
+                    _canvasTexts[_selectedTextIndex!].fontFamily = family;
+                  }
+                });
+              },
+              onClose: () => setState(() => _showTextStylePanel = false),
+            ),
+          ),
+
           // 5. 드로잉 툴 패널
           AnimatedPositioned(
             duration: const Duration(milliseconds: 250),
@@ -388,6 +420,10 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
                 maxLines: null,
                 keyboardType: TextInputType.multiline,
                 textInputAction: TextInputAction.newline,
+                style: TextStyle(
+                  fontFamily: currentTextFamily,
+                  fontSize: 16,
+                ),
                 decoration: const InputDecoration(
                   hintText: '텍스트 입력',
                   border: InputBorder.none,
@@ -396,9 +432,10 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
             ),
 
           // 6. 하단 아이콘바
-          if (!_showBackgroundPanel && !_showDrawingPanel && !_showModalSheet)
+          if (!_showBackgroundPanel && !_showDrawingPanel && !_showTextStylePanel && !_showModalSheet)
             Positioned(
-              left: 0, right: 0, bottom: 24 + MediaQuery.of(context).padding.bottom,
+              left: 0, right: 0,
+              bottom: (_showTextStylePanel ? 48 : 24) + MediaQuery.of(context).padding.bottom,
               child: Center(
                 child: EditorIconBar(
                   isTextMode: _isTextMode,
@@ -425,10 +462,22 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
                       _textFocusNode.requestFocus();
                     });
                   },
+                  onTextStylePressed: () {
+                    setState(() {
+                      _showTextStylePanel = !_showTextStylePanel;
+                      if (_showTextStylePanel) {
+                        _showBackgroundPanel = false;
+                        _showDrawingPanel = false;
+                      }
+                    });
+                  },
                   onTextClosed: () {
                     if (_textInputController.text.isNotEmpty) {
                       setState(() {
-                        _canvasTexts.add(_CanvasText(text: _textInputController.text));
+                        _canvasTexts.add(_CanvasText(
+                          text: _textInputController.text,
+                          fontFamily: currentTextFamily,
+                        ));
                         _selectedTextIndex = _canvasTexts.length - 1;
                       });
                     }
@@ -629,5 +678,12 @@ class _CanvasText {
   double x;
   double y;
   double fontSize;
-  _CanvasText({required this.text, this.x = 80, this.y = 200, this.fontSize = 16});
+  String fontFamily;
+  _CanvasText({
+    required this.text,
+    this.x = 80,
+    this.y = 200,
+    this.fontSize = 16,
+    this.fontFamily = 'Pretendard',
+  });
 }
