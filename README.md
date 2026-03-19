@@ -286,3 +286,11 @@
 - color_select_scale_sheet
 - import 정리
 - _addColor 이중 호출 제거
+
+# 2026-03-19-수정사항
+- Album edit form
+- 완료 기능 추가
+- 앱바 텍스트 가운데로 위치 
+- 
+- core/theme/font 경로 추가
+- font style 파일 import 전체 수정

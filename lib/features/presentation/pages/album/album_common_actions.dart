@@ -1,7 +1,7 @@
 // album_common_actions.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:petAblumMobile/core/theme/app_fonts_style_suit.dart';
+import 'package:petAblumMobile/core/theme/font/app_fonts_style_suit.dart';
 import 'package:petAblumMobile/core/widgets/delete_modal.dart';
 import 'package:petAblumMobile/features/presentation/pages/album/album_menu_board_sheet.dart';
 import 'dart:ui';

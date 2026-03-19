@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:petAblumMobile/core/theme/app_colors.dart';
-import 'package:petAblumMobile/core/theme/app_fonts_style_suit.dart';
+import 'package:petAblumMobile/core/theme/font/app_fonts_style_suit.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/album_view.dart';
 
 /// 앨범 아이템 위젯

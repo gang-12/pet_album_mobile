@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:petAblumMobile/core/theme/app_colors.dart';
-import 'package:petAblumMobile/core/theme/app_fonts_style_suit.dart';
 import 'package:petAblumMobile/core/theme/app_text_semantic.dart';
+import 'package:petAblumMobile/core/theme/font/app_fonts_style_suit.dart';
 
 class AppTextField extends StatelessWidget {
   final TextEditingController controller;

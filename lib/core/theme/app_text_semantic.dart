@@ -1,4 +1,6 @@
-import 'app_fonts_style_suit.dart';
+
+import 'package:petAblumMobile/core/theme/font/app_fonts_style_suit.dart';
+
 import 'app_colors.dart';
 
 class AppText {

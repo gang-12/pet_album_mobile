@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:petAblumMobile/core/theme/app_colors.dart';
-import 'package:petAblumMobile/core/theme/app_fonts_style_suit.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/color_select_scale.dart';
 

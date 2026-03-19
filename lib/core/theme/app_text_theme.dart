@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:petAblumMobile/core/theme/app_fonts_style_suit.dart';
+import 'package:petAblumMobile/core/theme/font/app_fonts_style_suit.dart';
 
 final appTextTheme = TextTheme(
   bodyMedium: AppTextStyle.body16R120,

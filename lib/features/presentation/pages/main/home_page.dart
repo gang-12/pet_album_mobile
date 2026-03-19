@@ -3,8 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:petAblumMobile/core/theme/app_button_theme.dart';
 import 'package:petAblumMobile/core/theme/app_colors.dart';
 import 'package:petAblumMobile/core/theme/app_common_button_styles.dart';
-import 'package:petAblumMobile/core/theme/app_fonts_style_dahyun.dart';
-import 'package:petAblumMobile/core/theme/app_fonts_style_suit.dart';
+import 'package:petAblumMobile/core/theme/font/app_fonts_style_dahyun.dart';
+import 'package:petAblumMobile/core/theme/font/app_fonts_style_suit.dart';
 import 'package:petAblumMobile/features/presentation/pages/main/alram.dart';
 
 class HomePage extends StatelessWidget {

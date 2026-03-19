@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:petAblumMobile/core/theme/app_colors.dart';
-import 'package:petAblumMobile/core/theme/app_fonts_style_suit.dart';
+import 'package:petAblumMobile/core/theme/font/app_fonts_style_suit.dart';
 import 'package:petAblumMobile/core/widgets/app_text_field.dart';
 import 'package:petAblumMobile/core/widgets/common_app_back_bar_scaffold.dart';
 import 'package:petAblumMobile/core/theme/app_custom_button.dart';

@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:petAblumMobile/core/theme/app_colors.dart';
-import 'package:petAblumMobile/core/theme/app_fonts_style_suit.dart';
+import 'package:petAblumMobile/core/theme/font/app_fonts_style_suit.dart';
 import 'package:petAblumMobile/core/widgets/common_app_bar_main_scaffold.dart';
 import 'package:petAblumMobile/features/presentation/pages/album/album_grid_item.dart';
 import 'package:petAblumMobile/features/presentation/pages/album/album_common_actions.dart';

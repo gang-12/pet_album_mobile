@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:petAblumMobile/core/theme/app_colors.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:petAblumMobile/core/theme/app_fonts_style_suit.dart';
+import 'package:petAblumMobile/core/theme/font/app_fonts_style_suit.dart';
 import 'package:petAblumMobile/core/widgets/common_app_bar_main_scaffold.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/album_icon_button_list_box.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -11,7 +11,9 @@ import 'package:petAblumMobile/features/presentation/pages/album_crud/text_edit/
 
 
 class AlbumEditFormPage extends StatefulWidget {
-  const AlbumEditFormPage({super.key});
+  final Map<String, String>? album;
+
+  const AlbumEditFormPage({super.key, this.album});
 
   @override
   State<AlbumEditFormPage> createState() => _AlbumEditFormPageState();
@@ -98,68 +100,106 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.white,
-      appBar: CommonMainAppBar(
-        // 1. undo/redo: 맨 왼쪽에서 20px, 아이콘 간격 8px
-        leadingPadding: const EdgeInsets.only(left: 20),
-        leadingContent: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            GestureDetector(
-              onTap: _undo,
-              child: SvgPicture.asset(
-                'assets/system/icons/icon_undo.svg',
-                width: 24,
-                height: 24,
-                colorFilter: ColorFilter.mode(
-                  AppColors.f05,
-                  BlendMode.srcIn,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: _redo,
-              child: SvgPicture.asset(
-                'assets/system/icons/icon_redo.svg',
-                width: 24,
-                height: 24,
-                colorFilter: ColorFilter.mode(
-                  AppColors.f05,
-                  BlendMode.srcIn,
-                ),
-              ),
-            ),
-          ],
-        ),
-        // 2. 앨범 이름 정중앙, subtitle20M120, f05
-        title: '새로운 앨범',
-        actions: [
-          // 3. 취소/완료 오른쪽에서 20px
-          Row(
-            mainAxisSize: MainAxisSize.min,
+      appBar: AppBar(
+        backgroundColor: AppColors.white,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        automaticallyImplyLeading: false,
+        titleSpacing: 0,
+        title: SizedBox(
+          height: 56,
+          child: Stack(
+            alignment: Alignment.center,
             children: [
-              GestureDetector(
-                onTap:  () => Navigator.pop(context),
+              // 가운데: 앨범 이름
+              Center(
                 child: Text(
-                  '취소',
-                  style: AppTextStyle.body16R120.copyWith(
-                    color: AppColors.f03,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              GestureDetector(
-                onTap: () {},
-                child: Text(
-                  '완료',
-                  style: AppTextStyle.body16R120.copyWith(
+                  widget.album?['title'] ?? '새로운 앨범',
+                  style: AppTextStyle.subtitle20M120.copyWith(
                     color: AppColors.f05,
                   ),
                 ),
               ),
+
+              // 왼쪽: undo / redo 아이콘
+              Positioned(
+                left: 20,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      onTap: _undo,
+                      child: SvgPicture.asset(
+                        'assets/system/icons/icon_undo.svg',
+                        width: 24,
+                        height: 24,
+                        colorFilter: ColorFilter.mode(
+                          AppColors.f05,
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: _redo,
+                      child: SvgPicture.asset(
+                        'assets/system/icons/icon_redo.svg',
+                        width: 24,
+                        height: 24,
+                        colorFilter: ColorFilter.mode(
+                          AppColors.f05,
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 오른쪽: 취소 / 완료 (같은 너비로 묶기)
+              Positioned(
+                right: 20,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: SizedBox(
+                        width: 40,
+                        child: Text(
+                          '취소',
+                          textAlign: TextAlign.center,
+                          style: AppTextStyle.body16R120.copyWith(
+                            color: AppColors.f03,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context, {
+                          'title': widget.album?['title'] ?? '새로운 앨범',
+                          'edited': 'true',
+                        });
+                      },
+                      child: SizedBox(
+                        width: 40,
+                        child: Text(
+                          '완료',
+                          textAlign: TextAlign.center,
+                          style: AppTextStyle.body16R120.copyWith(
+                            color: AppColors.f05,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-        ],
+        ),
       ),
       body: Stack(
         children: [

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:petAblumMobile/core/theme/app_colors.dart';
-import 'package:petAblumMobile/core/theme/app_fonts_style_dahyun.dart';
+import 'package:petAblumMobile/core/theme/font/app_fonts_style_dahyun.dart';
 
 class PetCard extends StatelessWidget {
   final String imageUrl;
