@@ -3,8 +3,7 @@ import 'package:petAblumMobile/core/theme/app_colors.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:petAblumMobile/core/theme/font/app_fonts_style_suit.dart';
 import 'package:petAblumMobile/core/widgets/common_app_bar_main_scaffold.dart';
-import 'package:petAblumMobile/features/presentation/pages/album_crud/album_icon_button_list_box.dart';
-import 'package:dotted_border/dotted_border.dart';
+import 'package:petAblumMobile/features/presentation/pages/album_crud/text_edit_button_list_box.dart';import 'package:dotted_border/dotted_border.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/background_template_sheet.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/drawing_tool_sheet.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/text_edit/text_style_sheet.dart';
@@ -25,8 +24,10 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
   bool _showDrawingPanel = false;
   bool _showModalSheet = false;
   bool _isDrawingMode = false;
-  bool _showTextStylePanel = false;
   String currentTextFamily = 'Pretendard';
+  Color currentTextColor = Colors.black;
+  TextAlign currentTextAlign = TextAlign.left;
+  bool currentTextUnderline = false;
   int? _selectedTextIndex;
   final List<_CanvasText> _canvasTexts = [];
 
@@ -87,6 +88,9 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
         _canvasTexts.add(_CanvasText(
           text: _textInputController.text,
           fontFamily: currentTextFamily,
+          color: currentTextColor,
+          textAlign: currentTextAlign,
+          isUnderline: currentTextUnderline,
         ));
         _selectedTextIndex = _canvasTexts.length - 1;
       });
@@ -352,10 +356,15 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
                         ),
                         child: Text(
                           item.text,
+                          textAlign: item.textAlign,
                           style: TextStyle(
                             fontSize: item.fontSize,
-                            color: Colors.black,
+                            color: item.color,
                             fontFamily: item.fontFamily,
+                            decoration: item.isUnderline
+                                ? TextDecoration.underline
+                                : TextDecoration.none,
+                            decorationColor: item.color,
                           ),
                         ),
                       ),
@@ -407,28 +416,6 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
               ),
             );
           }),
-          // 5-1. 폰트 스타일 패널
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOut,
-            left: 0, right: 0,
-            bottom: _showTextStylePanel ? 0 : -500,
-            child: TextStylePanel(
-              selectedFontFamily: currentTextFamily,
-              onTextFamilyChanged: (family) {
-                setState(() {
-                  currentTextFamily = family;
-                  // 선택된 텍스트가 있으면 해당 텍스트 폰트도 즉시 변경
-                  if (_selectedTextIndex != null &&
-                      _selectedTextIndex! < _canvasTexts.length) {
-                    _canvasTexts[_selectedTextIndex!].fontFamily = family;
-                  }
-                });
-              },
-              onClose: () => setState(() => _showTextStylePanel = false),
-            ),
-          ),
-
           // 5. 드로잉 툴 패널
           AnimatedPositioned(
             duration: const Duration(milliseconds: 250),
@@ -463,7 +450,12 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
                 style: TextStyle(
                   fontFamily: currentTextFamily,
                   fontSize: 16,
+                  color: currentTextColor,
+                  decoration: currentTextUnderline
+                      ? TextDecoration.underline
+                      : TextDecoration.none,
                 ),
+                textAlign: currentTextAlign,
                 decoration: const InputDecoration(
                   hintText: '텍스트 입력',
                   border: InputBorder.none,
@@ -472,13 +464,16 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
             ),
 
           // 6. 하단 아이콘바
-          if (!_showBackgroundPanel && !_showDrawingPanel && !_showTextStylePanel && !_showModalSheet)
+          if (!_showBackgroundPanel && !_showDrawingPanel && !_showModalSheet)
             Positioned(
               left: 0, right: 0,
-              bottom: (_showTextStylePanel ? 48 : 24) + MediaQuery.of(context).padding.bottom,
+              bottom: 24 + MediaQuery.of(context).padding.bottom,
               child: Center(
                 child: EditorIconBar(
                   isTextMode: _isTextMode,
+                  selectedFontFamily: _selectedTextIndex != null && _selectedTextIndex! < _canvasTexts.length
+                      ? _canvasTexts[_selectedTextIndex!].fontFamily
+                      : currentTextFamily,
                   onBackgroundPressed: () {
                     setState(() {
                       _showBackgroundPanel = !_showBackgroundPanel;
@@ -503,13 +498,42 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
                     });
                   },
                   onTextStylePressed: () {
-                    setState(() {
-                      _showTextStylePanel = !_showTextStylePanel;
-                      if (_showTextStylePanel) {
-                        _showBackgroundPanel = false;
-                        _showDrawingPanel = false;
-                      }
-                    });
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      barrierColor: Colors.transparent,
+                      isDismissible: true,
+                      enableDrag: true,
+                      builder: (context) => DraggableScrollableSheet(
+                        initialChildSize: 0.4,
+                        minChildSize: 0.3,
+                        maxChildSize: 0.6,
+                        builder: (context, scrollController) => TextStylePanel(
+                          selectedFontFamily: currentTextFamily,
+                          selectedTextAlign: currentTextAlign,
+                          onTextFamilyChanged: (family) {
+                            setState(() {
+                              currentTextFamily = family;
+                              if (_selectedTextIndex != null &&
+                                  _selectedTextIndex! < _canvasTexts.length) {
+                                _canvasTexts[_selectedTextIndex!].fontFamily = family;
+                              }
+                            });
+                          },
+                          onTextAlignChanged: (align) {
+                            setState(() {
+                              currentTextAlign = align;
+                              if (_selectedTextIndex != null &&
+                                  _selectedTextIndex! < _canvasTexts.length) {
+                                _canvasTexts[_selectedTextIndex!].textAlign = align;
+                              }
+                            });
+                          },
+                          onClose: () => Navigator.pop(context),
+                        ),
+                      ),
+                    );
                   },
                   onTextClosed: () {
                     if (_textInputController.text.isNotEmpty) {
@@ -517,6 +541,9 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
                         _canvasTexts.add(_CanvasText(
                           text: _textInputController.text,
                           fontFamily: currentTextFamily,
+                          color: currentTextColor,
+                          textAlign: currentTextAlign,
+                          isUnderline: currentTextUnderline,
                         ));
                         _selectedTextIndex = _canvasTexts.length - 1;
                       });
@@ -525,6 +552,42 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
                     _textFocusNode.unfocus();
                     setState(() {
                       _isTextMode = false;
+                    });
+                  },
+                  onFontFamilyChanged: (family) {
+                    setState(() {
+                      currentTextFamily = family;
+                      if (_selectedTextIndex != null &&
+                          _selectedTextIndex! < _canvasTexts.length) {
+                        _canvasTexts[_selectedTextIndex!].fontFamily = family;
+                      }
+                    });
+                  },
+                  onTextColorChanged: (color) {
+                    setState(() {
+                      currentTextColor = color;
+                      if (_selectedTextIndex != null &&
+                          _selectedTextIndex! < _canvasTexts.length) {
+                        _canvasTexts[_selectedTextIndex!].color = color;
+                      }
+                    });
+                  },
+                  onTextAlignChanged: (align) {
+                    setState(() {
+                      currentTextAlign = align;
+                      if (_selectedTextIndex != null &&
+                          _selectedTextIndex! < _canvasTexts.length) {
+                        _canvasTexts[_selectedTextIndex!].textAlign = align;
+                      }
+                    });
+                  },
+                  onUnderlineChanged: (val) {
+                    setState(() {
+                      currentTextUnderline = val;
+                      if (_selectedTextIndex != null &&
+                          _selectedTextIndex! < _canvasTexts.length) {
+                        _canvasTexts[_selectedTextIndex!].isUnderline = val;
+                      }
                     });
                   },
                 ),
@@ -719,11 +782,18 @@ class _CanvasText {
   double y;
   double fontSize;
   String fontFamily;
+  Color color;
+  TextAlign textAlign;
+  bool isUnderline;
+
   _CanvasText({
     required this.text,
     this.x = 80,
     this.y = 200,
     this.fontSize = 16,
     this.fontFamily = 'Pretendard',
+    this.color = Colors.black,
+    this.textAlign = TextAlign.left,
+    this.isUnderline = false,
   });
 }

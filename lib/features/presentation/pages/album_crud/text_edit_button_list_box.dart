@@ -7,11 +7,12 @@ import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/photo
 import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/sticker_search_bottom_sheet.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/text_edit/text_style_sheet.dart';
 
-// 정렬 순서: 왼쪽 → 중앙 → 오른쪽 → 반복
-enum _AlignCycle { left, center, right }
+
+
 
 class EditorIconBar extends StatefulWidget {
   final bool isTextMode;
+  final String? selectedFontFamily;
   final VoidCallback? onDrawPressed;
   final VoidCallback? onBackgroundPressed;
   final VoidCallback? onSheetOpened;
@@ -29,6 +30,7 @@ class EditorIconBar extends StatefulWidget {
   const EditorIconBar({
     super.key,
     this.isTextMode = false,
+    this.selectedFontFamily,
     this.onDrawPressed,
     this.onBackgroundPressed,
     this.onSheetOpened,
@@ -49,29 +51,36 @@ class EditorIconBar extends StatefulWidget {
 class _EditorIconBarState extends State<EditorIconBar> {
   Color? selectedColor;
   String _selectedFontFamily = 'Pretendard';
-  String _selectedFontLabel = '가'; // 폰트 버튼에 표시할 텍스트
-  _AlignCycle _alignCycle = _AlignCycle.left;
+  String _selectedFontLabel = '가';
+  TextAlign _selectedAlign = TextAlign.left;
   bool _isUnderline = false;
 
-  // 현재 정렬 아이콘 경로
-  String get _alignIconPath {
-    switch (_alignCycle) {
-      case _AlignCycle.left:
-        return 'assets/system/icons/text_edit_left.svg';
-      case _AlignCycle.center:
-        return 'assets/system/icons/text_edit_middle.svg';
-      case _AlignCycle.right:
-        return 'assets/system/icons/text_edit_right.svg';
+  static const _alignCycle = [
+    (TextAlign.left,   'assets/system/icons/icon_align_left.svg'),
+    (TextAlign.center, 'assets/system/icons/icon_align_center.svg'),
+    (TextAlign.right,  'assets/system/icons/icon_align_right.svg'),
+  ];
+
+  String get _alignIconPath =>
+      _alignCycle.firstWhere((e) => e.$1 == _selectedAlign).$2;
+
+  @override
+  void didUpdateWidget(EditorIconBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 부모에서 선택된 폰트가 바뀌면 버튼 라벨 동기화
+    if (widget.selectedFontFamily != null &&
+        widget.selectedFontFamily != _selectedFontFamily) {
+      final matched = TextStylePanel.fonts.firstWhere(
+            (f) => f.fontFamily == widget.selectedFontFamily,
+        orElse: () => const FontItem(label: '가', fontFamily: 'Pretendard'),
+      );
+      setState(() {
+        _selectedFontFamily = widget.selectedFontFamily!;
+        _selectedFontLabel = matched.label.split('\n').first;
+      });
     }
   }
 
-  TextAlign get _currentTextAlign {
-    switch (_alignCycle) {
-      case _AlignCycle.left:   return TextAlign.left;
-      case _AlignCycle.center: return TextAlign.center;
-      case _AlignCycle.right:  return TextAlign.right;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,27 +138,23 @@ class _EditorIconBarState extends State<EditorIconBar> {
             colorFilter: ColorFilter.mode(AppColors.f05, BlendMode.srcIn),
           ),
         ),
-        const SizedBox(width: 20),
+        const SizedBox(width: 12),
 
-        // 폰트 버튼: 선택된 폰트로 텍스트 표시
+        // 폰트 버튼: 선택된 폰트 라벨 — 반응형
         _buildFontLabelButton(),
-        const SizedBox(width: 20),
+        const SizedBox(width: 12),
 
-        // 색상 아이콘
-        _buildIconButton('assets/system/icons/text_edit_impact.svg', _onColorPressed),
-        const SizedBox(width: 20),
-
-        // 정렬 버튼: 클릭마다 왼쪽→중앙→오른쪽 순환
+        // 정렬 버튼: 클릭마다 왼쪽→가운데→오른쪽 순환
         _buildIconButton(_alignIconPath, _onAlignPressed),
-        const SizedBox(width: 20),
+        const SizedBox(width: 12),
 
         // 밑줄 버튼: 활성화 시 main 색상으로 강조
         _buildUnderlineButton(),
-        const SizedBox(width: 20),
+        const SizedBox(width: 12),
 
         // 색상 원 버튼
         _buildColorButton(selectedColor ?? const Color(0xFFBDBDBD)),
-        const SizedBox(width: 20),
+        const SizedBox(width: 12),
 
         // ✓ 확인 (제일 오른쪽)
         GestureDetector(
@@ -165,21 +170,26 @@ class _EditorIconBarState extends State<EditorIconBar> {
     );
   }
 
-  // 폰트 라벨 버튼: 선택된 폰트로 텍스트 표시
+  // 폰트 라벨 버튼: 선택된 폰트 라벨 — 길어도 넘치지 않게 FittedBox 처리
   Widget _buildFontLabelButton() {
     return GestureDetector(
       onTap: _onFontPressed,
-      child: Container(
-        width: 24,
-        height: 24,
-        alignment: Alignment.center,
-        child: Text(
-          _selectedFontLabel,
-          style: TextStyle(
-            fontFamily: _selectedFontFamily,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.f05,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 80, minWidth: 24),
+        child: SizedBox(
+          height: 24,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.center,
+            child: Text(
+              _selectedFontLabel,
+              style: TextStyle(
+                fontFamily: _selectedFontFamily,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.f05,
+              ),
+            ),
           ),
         ),
       ),
@@ -238,56 +248,17 @@ class _EditorIconBarState extends State<EditorIconBar> {
 
   // ── 텍스트 모드 액션 ──
 
-  // 폰트 선택 시트 열기
+  // 폰트 선택 시트 열기 → 부모의 onTextStylePressed로 위임
   void _onFontPressed() {
     widget.onTextStylePressed?.call();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.transparent,
-      isDismissible: true,
-      enableDrag: true,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.4,
-        minChildSize: 0.3,
-        maxChildSize: 0.6,
-        builder: (context, scrollController) => TextStylePanel(
-          selectedFontFamily: _selectedFontFamily,
-          onTextFamilyChanged: (fontFamily) {
-            // 선택된 폰트의 label을 찾아서 버튼에 표시
-            final matched = TextStylePanel.fonts.firstWhere(
-                  (f) => f.fontFamily == fontFamily,
-              orElse: () => const FontItem(label: '가', fontFamily: 'Pretendard'),
-            );
-            setState(() {
-              _selectedFontFamily = fontFamily;
-              _selectedFontLabel = matched.label.split('\n').first;
-            });
-            widget.onFontFamilyChanged?.call(fontFamily);
-          },
-          onClose: () => Navigator.pop(context),
-        ),
-      ),
-    );
   }
 
-  // 정렬: 왼쪽 → 중앙 → 오른쪽 순환
+  // 정렬: 왼쪽 → 가운데 → 오른쪽 순환
   void _onAlignPressed() {
-    setState(() {
-      switch (_alignCycle) {
-        case _AlignCycle.left:
-          _alignCycle = _AlignCycle.center;
-          break;
-        case _AlignCycle.center:
-          _alignCycle = _AlignCycle.right;
-          break;
-        case _AlignCycle.right:
-          _alignCycle = _AlignCycle.left;
-          break;
-      }
-    });
-    widget.onTextAlignChanged?.call(_currentTextAlign);
+    final idx = _alignCycle.indexWhere((e) => e.$1 == _selectedAlign);
+    final next = _alignCycle[(idx + 1) % _alignCycle.length];
+    setState(() => _selectedAlign = next.$1);
+    widget.onTextAlignChanged?.call(_selectedAlign);
   }
 
   // 밑줄 토글

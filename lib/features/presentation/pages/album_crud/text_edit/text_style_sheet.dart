@@ -14,24 +14,27 @@ class FontItem {
 /// 폰트 스타일 선택 패널 (토글 방식 — drawing_tool_sheet와 동일 구조)
 class TextStylePanel extends StatefulWidget {
   final String selectedFontFamily;
+  final TextAlign selectedTextAlign;
   final ValueChanged<String> onTextFamilyChanged;
+  final ValueChanged<TextAlign>? onTextAlignChanged;
   final VoidCallback onClose;
 
   const TextStylePanel({
     Key? key,
     required this.selectedFontFamily,
+    this.selectedTextAlign = TextAlign.left,
     required this.onTextFamilyChanged,
+    this.onTextAlignChanged,
     required this.onClose,
   }) : super(key: key);
 
   // 외부에서 TextStylePanel.fonts 로 접근 가능
   static const List<FontItem> fonts = [
-    FontItem(label: '프리텐다드',       fontFamily: 'Pretendard'),
-    FontItem(label: '프리텐다드\nBold', fontFamily: 'PretendardExtraBold'),
-    FontItem(label: 'Memoment\nKkukkukk', fontFamily: 'MemomentKkukkukk'),
-    FontItem(label: 'LTIM',             fontFamily: 'LTIM'),
-    FontItem(label: 'Hubbell',          fontFamily: 'Soap'),
-    FontItem(label: 'IMPACT',           fontFamily: 'Impact'),
+    FontItem(label: '프리텐다드',             fontFamily: 'Pretendard'),
+    FontItem(label: 'Memoment\nKkukkukk',   fontFamily: 'MemomentKkukkukk'),
+    FontItem(label: 'LTIM',                  fontFamily: 'LTIM'),
+    FontItem(label: 'Hubbell',               fontFamily: 'Soap'),
+    FontItem(label: 'IMPACT',                fontFamily: 'Impact'),
   ];
 
   @override
@@ -40,11 +43,13 @@ class TextStylePanel extends StatefulWidget {
 
 class _FontStylePanelState extends State<TextStylePanel> {
   late String _selectedFamily;
+  late TextAlign _selectedAlign;
 
   @override
   void initState() {
     super.initState();
     _selectedFamily = widget.selectedFontFamily;
+    _selectedAlign = widget.selectedTextAlign;
   }
 
   @override
@@ -132,6 +137,7 @@ class _FontStylePanelState extends State<TextStylePanel> {
       ),
     );
   }
+
 
   // ── 폰트 그리드 (wrap) ──
   Widget _buildFontGrid() {
