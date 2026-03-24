@@ -157,12 +157,13 @@ flutter:
     - assets/system/pet_character/dog/basic_dog/
     - assets/system/pet_character/dog/expression_dog/
     - assets/system/pet_character/dog/faceless_dog/
+    - assets/system/sticker/bubble/
     - assets/system/sticker/deco/
     - assets/system/sticker/food/
-    - assets/system/sticker/masking_tape/
+    - assets/system/sticker/maskingtape/
     - assets/system/sticker/message/
     - assets/system/sticker/nature/
-    - assets/system/sticker/note_paper/
+    - assets/system/sticker/notepaper/
     - assets/system/sticker/props/
     - assets/system/sticker/toy/
 
