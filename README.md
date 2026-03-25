@@ -333,4 +333,20 @@
 - 카테고리 클릭시 가운데로 자동 스크롤
 - 스티커 배경 색 추가 
 - 간격 수정
+
+# 2026-03-25-수정사항
+- icon_zoom_inout.svg 추가
 - 
+- album_edit_form
+- 텍스트 입력 후 텍스트 보조 아이콘, ui 수정 
+- 텍스트 기본 크기 20으로 수정
+- 
+- photo_gallery_sheet
+- 비디오 아이콘 삭제 (비디오는 안뜨도록
+- 
+- sticker_search_bottom_sheet
+- 카테고리 자동 스크롤 추가
+- 
+- album_edit_form, text_edit_button_list_box
+- 스티커 선택 시 편집 페이지에 추가
+- 이동, 삭제, 크기 조절 가능

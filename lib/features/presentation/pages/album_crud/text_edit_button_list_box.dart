@@ -15,7 +15,7 @@ class EditorIconBar extends StatefulWidget {
   final String? selectedFontFamily;
   final VoidCallback? onDrawPressed;
   final VoidCallback? onBackgroundPressed;
-  final VoidCallback? onSheetOpened;
+  final Future<Sticker?> Function()? onSheetOpened;  // 스티커 시트 열기 (부모가 열고 결과 반환)
   final VoidCallback? onSheetClosed;
   final VoidCallback? onTextPressed;
   final VoidCallback? onTextClosed;
@@ -238,12 +238,9 @@ class _EditorIconBarState extends State<EditorIconBar> {
   void _onTextPushPressed() => widget.onTextPressed?.call();
 
   Future<void> _onStickerPressed(BuildContext context) async {
-    widget.onSheetOpened?.call();
-    final selectedSticker = await StickerBottomSheet.show(context);
-    widget.onSheetClosed?.call();
-    if (selectedSticker != null) {
-      print('선택된 스티커: ${selectedSticker.emoji} - ${selectedSticker.name}');
-    }
+    if (widget.onSheetOpened == null) return;
+    final selectedSticker = await widget.onSheetOpened!();
+    // 결과 처리는 부모(album_edit_form)에서 담당
   }
 
   // ── 텍스트 모드 액션 ──

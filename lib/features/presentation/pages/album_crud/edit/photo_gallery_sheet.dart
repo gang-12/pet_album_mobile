@@ -260,30 +260,6 @@ class _PhotoGalleryBottomSheetState extends State<PhotoGalleryBottomSheet> {
                                         )                                            : null,
                                       ),
                                     ),
-
-                                  // 비디오 아이콘
-                                  if (photo.hasVideo)
-                                    Positioned(
-                                      bottom: 8,
-                                      right: 8,
-                                      child: Container(
-                                        width: 24,
-                                        height: 24,
-                                        decoration: const BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: AppColors.f05,
-                                        ),
-                                        child: SvgPicture.asset(
-                                          'assets/system/icons/icon_play_arrow.svg',
-                                          width: 16,
-                                          height: 16,
-                                          colorFilter: const ColorFilter.mode(
-                                            AppColors.white,
-                                            BlendMode.srcIn,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
                                 ],
                               ),
                             );

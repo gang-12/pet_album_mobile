@@ -7,6 +7,7 @@ import 'package:petAblumMobile/features/presentation/pages/album_crud/text_edit_
 import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/background_template_sheet.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/drawing_tool_sheet.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/text_edit/text_style_sheet.dart';
+import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/sticker_search_bottom_sheet.dart';
 
 
 class AlbumEditFormPage extends StatefulWidget {
@@ -30,6 +31,8 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
   bool currentTextUnderline = false;
   int? _selectedTextIndex;
   final List<_CanvasText> _canvasTexts = [];
+  int? _selectedStickerIndex;
+  final List<_CanvasSticker> _canvasStickers = [];
 
   EditorState _current = EditorState();
   List<EditorState> _history = [];
@@ -225,7 +228,10 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
 
           Positioned.fill(
             child: GestureDetector(
-              onTap: () => setState(() => _selectedTextIndex = null),
+              onTap: () => setState(() {
+                _selectedTextIndex = null;
+                _selectedStickerIndex = null;
+              }),
               behavior: HitTestBehavior.translucent,
               child: SafeArea(child: _first()),
             ),
@@ -348,40 +354,60 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
             final index = entry.key;
             final item = entry.value;
             final isSelected = _selectedTextIndex == index;
-            const handleSize = 24.0;
+            const handleSize = 20.0;
             const padding = handleSize / 2;
+
+            // 핸들 공통 그림자
+            const handleShadow = [
+              BoxShadow(
+                color: Color(0x1F000000),
+                blurRadius: 3,
+                spreadRadius: 0,
+                offset: Offset(0, 0),
+              ),
+            ];
 
             return Positioned(
               left: item.x - padding,
               top: item.y - padding,
-              child: GestureDetector(
-                onTap: () => setState(() {
-                  if (_selectedTextIndex == index) {
-                    _selectedTextIndex = null;
-                  } else {
-                    _selectedTextIndex = index;
-                  }
-                }),
-                onPanUpdate: (details) {
-                  setState(() {
-                    item.x += details.delta.dx;
-                    item.y += details.delta.dy;
-                  });
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(padding),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // 텍스트 컨테이너 + 드래그/선택 GestureDetector
+                  Padding(
+                    padding: const EdgeInsets.all(padding),
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => setState(() {
+                        if (_selectedTextIndex == index) {
+                          _selectedTextIndex = null;
+                        } else {
+                          _selectedTextIndex = index;
+                        }
+                      }),
+                      onPanUpdate: (details) {
+                        setState(() {
+                          item.x += details.delta.dx;
+                          item.y += details.delta.dy;
+                        });
+                      },
+                      child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: isSelected
                             ? BoxDecoration(
-                          border: Border.all(color: Colors.blue, width: 1.5),
+                          border: Border.all(color: Colors.white, width: 2.0),
                           borderRadius: BorderRadius.circular(4),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x1F000000),
+                              blurRadius: 3,
+                              spreadRadius: 0,
+                              offset: Offset(0, 0),
+                            ),
+                          ],
                         )
                             : BoxDecoration(
-                          border: Border.all(color: Colors.transparent, width: 1.5),
+                          border: Border.all(color: Colors.transparent, width: 2.0),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -398,54 +424,228 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
                           ),
                         ),
                       ),
-                      if (isSelected)
-                        Positioned(
-                          right: -padding,
-                          bottom: -padding,
-                          child: GestureDetector(
-                            onPanUpdate: (details) {
-                              setState(() {
-                                item.fontSize = (item.fontSize + details.delta.dx * 0.3).clamp(8, 80);
-                              });
-                            },
-                            child: Container(
-                              width: handleSize,
-                              height: handleSize,
-                              decoration: const BoxDecoration(
-                                color: Colors.blue,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                        ),
-                      if (isSelected)
-                        Positioned(
-                          right: -padding,
-                          top: -padding,
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _canvasTexts.removeAt(index);
-                                _selectedTextIndex = null;
-                              });
-                            },
-                            child: Container(
-                              width: handleSize,
-                              height: handleSize,
-                              decoration: const BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.close, size: 14, color: Colors.white),
-                            ),
-                          ),
-                        ),
-                    ],
+                    ),
                   ),
-                ),
+
+                  // 좌측 상단: X (삭제) — 부모 GestureDetector와 완전 분리
+                  if (isSelected)
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          setState(() {
+                            _canvasTexts.removeAt(index);
+                            _selectedTextIndex = null;
+                          });
+                        },
+                        child: Container(
+                          width: handleSize,
+                          height: handleSize,
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: handleShadow,
+                          ),
+                          child: SvgPicture.asset(
+                            'assets/system/icons/icon_close.svg',
+                            width: 20,
+                            height: 20,
+                            fit: BoxFit.contain,
+                            colorFilter: ColorFilter.mode(
+                              AppColors.f05,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // 우측 하단: 크기 조절 — 부모 GestureDetector와 완전 분리
+                  if (isSelected)
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onPanUpdate: (details) {
+                          setState(() {
+                            item.fontSize = (item.fontSize + details.delta.dx * 0.3).clamp(8, 80);
+                          });
+                        },
+                        child: Container(
+                          width: handleSize,
+                          height: handleSize,
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: handleShadow,
+                          ),
+                          child: Center(
+                            child: SvgPicture.asset(
+                              'assets/system/icons/icon_zoom_inout.svg',
+                              width: 20,
+                              height: 20,
+                              fit: BoxFit.contain,
+                              colorFilter: ColorFilter.mode(
+                                AppColors.f05,
+                                BlendMode.srcIn,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             );
           }),
+
+          // 스티커 렌더링
+          ..._canvasStickers.asMap().entries.map((entry) {
+            final index = entry.key;
+            final item = entry.value;
+            final isSelected = _selectedStickerIndex == index;
+            const handleSize = 20.0;
+            const padding = handleSize / 2;
+            const handleShadow = [
+              BoxShadow(
+                color: Color(0x1F000000),
+                blurRadius: 3,
+                spreadRadius: 0,
+                offset: Offset(0, 0),
+              ),
+            ];
+
+            return Positioned(
+              left: item.x - padding,
+              top: item.y - padding,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(padding),
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => setState(() {
+                        _selectedStickerIndex = isSelected ? null : index;
+                        _selectedTextIndex = null;
+                      }),
+                      onPanUpdate: (details) {
+                        setState(() {
+                          item.x += details.delta.dx;
+                          item.y += details.delta.dy;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: isSelected
+                            ? BoxDecoration(
+                          border: Border.all(color: Colors.white, width: 2.0),
+                          borderRadius: BorderRadius.circular(4),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x1F000000),
+                              blurRadius: 3,
+                              spreadRadius: 0,
+                              offset: Offset(0, 0),
+                            ),
+                          ],
+                        )
+                            : BoxDecoration(
+                          border: Border.all(color: Colors.transparent, width: 2.0),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: item.svgPath != null
+                            ? SvgPicture.asset(
+                          item.svgPath!,
+                          width: item.size,
+                          height: item.size,
+                        )
+                            : Text(
+                          item.emoji,
+                          style: TextStyle(fontSize: item.size * 0.7),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // 좌측 상단: X 삭제
+                  if (isSelected)
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          setState(() {
+                            _canvasStickers.removeAt(index);
+                            _selectedStickerIndex = null;
+                          });
+                        },
+                        child: Container(
+                          width: handleSize,
+                          height: handleSize,
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: handleShadow,
+                          ),
+                          child: SvgPicture.asset(
+                            'assets/system/icons/icon_close.svg',
+                            width: 20,
+                            height: 20,
+                            fit: BoxFit.contain,
+                            colorFilter: ColorFilter.mode(
+                              AppColors.f05,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // 우측 하단: 리사이즈 핸들
+                  if (isSelected)
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onPanUpdate: (details) {
+                          setState(() {
+                            item.size = (item.size + details.delta.dx).clamp(24.0, 200.0);
+                          });
+                        },
+                        child: Container(
+                          width: handleSize,
+                          height: handleSize,
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: handleShadow,
+                          ),
+                          child: Center(
+                            child: SvgPicture.asset(
+                              'assets/system/icons/icon_zoom_inout.svg',
+                              width: 20,
+                              height: 20,
+                              fit: BoxFit.contain,
+                              colorFilter: ColorFilter.mode(
+                                AppColors.f05,
+                                BlendMode.srcIn,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          }),
+
           // 5. 드로잉 툴 패널
           AnimatedPositioned(
             duration: const Duration(milliseconds: 250),
@@ -479,7 +679,7 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
                 textInputAction: TextInputAction.newline,
                 style: TextStyle(
                   fontFamily: currentTextFamily,
-                  fontSize: 16,
+                  fontSize: 20,
                   color: currentTextColor,
                   decoration: currentTextUnderline
                       ? TextDecoration.underline
@@ -519,7 +719,22 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
                       }
                     });
                   },
-                  onSheetOpened: () => setState(() => _showModalSheet = true),
+                  onSheetOpened: () async {
+                    setState(() => _showModalSheet = true);
+                    final sticker = await StickerBottomSheet.show(context);
+                    if (!mounted) return null;
+                    setState(() => _showModalSheet = false);
+                    if (sticker != null) {
+                      setState(() {
+                        _canvasStickers.add(_CanvasSticker(
+                          svgPath: sticker.svgPath,
+                          emoji: sticker.emoji,
+                        ));
+                        _selectedStickerIndex = _canvasStickers.length - 1;
+                      });
+                    }
+                    return sticker;
+                  },
                   onSheetClosed: () => setState(() => _showModalSheet = false),
                   onTextPressed: () {
                     setState(() => _isTextMode = true);
@@ -806,6 +1021,22 @@ class DrawingPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
+class _CanvasSticker {
+  final String? svgPath;
+  final String emoji;
+  double x;
+  double y;
+  double size;
+
+  _CanvasSticker({
+    this.svgPath,
+    this.emoji = '',
+    this.x = 100,
+    this.y = 200,
+    this.size = 80,
+  });
+}
+
 class _CanvasText {
   final String text;
   double x;
@@ -820,7 +1051,7 @@ class _CanvasText {
     required this.text,
     this.x = 80,
     this.y = 200,
-    this.fontSize = 16,
+    this.fontSize = 20,
     this.fontFamily = 'Pretendard',
     this.color = Colors.black,
     this.textAlign = TextAlign.left,

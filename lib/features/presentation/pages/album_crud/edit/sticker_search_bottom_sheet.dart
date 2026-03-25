@@ -43,6 +43,7 @@ class _StickerBottomSheetState extends State<StickerBottomSheet>
   final FocusNode _focusNode = FocusNode();
   final DraggableScrollableController _sheetController = DraggableScrollableController();
   final ScrollController _tabScrollController = ScrollController();
+  late final List<GlobalKey> _tabKeys;
 
   final List<String> _categories = ['말풍선', '데코', '음식', '마스킹테이프', '문자', '자연', '메모지', '소품', '장난감'];
 
@@ -317,9 +318,13 @@ class _StickerBottomSheetState extends State<StickerBottomSheet>
   @override
   void initState() {
     super.initState();
+    _tabKeys = List.generate(_categories.length, (_) => GlobalKey());
     _tabController = TabController(length: _categories.length, vsync: this);
     _tabController.addListener(() {
       setState(() {});
+      if (_tabController.indexIsChanging) {
+        _scrollToSelectedTab(_tabController.index);
+      }
     });
 
     // 검색창 포커스 시 80%로 확장
@@ -331,6 +336,36 @@ class _StickerBottomSheetState extends State<StickerBottomSheet>
           curve: Curves.easeOut,
         );
       }
+    });
+  }
+
+  void _scrollToSelectedTab(int index) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final key = _tabKeys[index];
+      final ctx = key.currentContext;
+      if (ctx == null || !_tabScrollController.hasClients) return;
+
+      final box = ctx.findRenderObject() as RenderBox?;
+      if (box == null) return;
+
+      final scrollBox = _tabScrollController.position.context.storageContext.findRenderObject() as RenderBox?;
+      if (scrollBox == null) return;
+
+      final itemOffset = box.localToGlobal(Offset.zero, ancestor: scrollBox).dx;
+      final itemWidth = box.size.width;
+      final viewportWidth = _tabScrollController.position.viewportDimension;
+      final currentOffset = _tabScrollController.offset;
+
+      final targetOffset = (currentOffset + itemOffset - (viewportWidth - itemWidth) / 2).clamp(
+        _tabScrollController.position.minScrollExtent,
+        _tabScrollController.position.maxScrollExtent,
+      );
+
+      _tabScrollController.animateTo(
+        targetOffset,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
     });
   }
 
@@ -576,8 +611,12 @@ class _StickerBottomSheetState extends State<StickerBottomSheet>
         children: List.generate(_categories.length, (index) {
           final isSelected = _tabController.index == index;
           return GestureDetector(
-            onTap: () => _tabController.animateTo(index),
+            onTap: () {
+              _tabController.animateTo(index);
+              _scrollToSelectedTab(index);
+            },
             child: Container(
+              key: _tabKeys[index],
               margin: EdgeInsets.only(
                 right: index < _categories.length - 1 ? 12 : 0,
               ),
