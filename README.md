@@ -334,7 +334,7 @@
 - 스티커 배경 색 추가 
 - 간격 수정
 
-# 2026-03-25-수정사항
+# 2026-03-25-수정사항/tnrjs
 - icon_zoom_inout.svg 추가
 - 
 - album_edit_form
@@ -350,3 +350,17 @@
 - album_edit_form, text_edit_button_list_box
 - 스티커 선택 시 편집 페이지에 추가
 - 이동, 삭제, 크기 조절 가능
+
+# 2026-03-26,27-수정사항
+- background_template 추가
+- icon_autorenew 추가
+- 
+- background_template_sheet
+- template 추가
+- 
+- album_edit_form
+- 레이어 순서 변경으로 background_sheet 위에 스티커, 텍스트 보이던 문제 해결
+- 아이템 터치 시 최상단 레이어에 오도록 수정
+- 회전 기능 추가 CanvasItem에 angle 속성을 추가
+- 앱바에 앨범 제목 수정 기능 추가
+- background_template 적용

@@ -1,7 +1,9 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:petAblumMobile/core/theme/app_colors.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:petAblumMobile/core/theme/font/app_fonts_style_suit.dart';
+import 'package:petAblumMobile/core/widgets/app_text_field.dart';
 import 'package:petAblumMobile/core/widgets/common_app_bar_main_scaffold.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/text_edit_button_list_box.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -10,6 +12,8 @@ import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/drawi
 import 'package:petAblumMobile/features/presentation/pages/album_crud/text_edit/text_style_sheet.dart';
 import 'package:petAblumMobile/features/presentation/pages/album_crud/edit/sticker_search_bottom_sheet.dart';
 
+// AppTextField 위젯이 다른 경로에 있다면 여기에 import 해주세요.
+// import 'AppTextField_경로';
 
 class AlbumEditFormPage extends StatefulWidget {
   final Map<String, String>? album;
@@ -21,19 +25,22 @@ class AlbumEditFormPage extends StatefulWidget {
 }
 
 class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
+  // 앨범 제목 상태 변수
+  late String _albumTitle;
+
   bool _isInitialState = true;
   bool _showBackgroundPanel = false;
   bool _showDrawingPanel = false;
   bool _showModalSheet = false;
   bool _isDrawingMode = false;
+
   String currentTextFamily = 'Pretendard';
   Color currentTextColor = Colors.black;
   TextAlign currentTextAlign = TextAlign.left;
   bool currentTextUnderline = false;
-  int? _selectedTextIndex;
-  List<_CanvasText> get _canvasTexts => _current.texts;
-  int? _selectedStickerIndex;
-  final List<_CanvasSticker> _canvasStickers = [];
+
+  String? _selectedItemId;
+  final Map<String, GlobalKey> _itemKeys = {};
 
   double _textInputX = 40;
   double _textInputY = 200;
@@ -47,6 +54,42 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
   double currentLineWidth = 4;
   Color currentColor = const Color(0xFFBDBDBD);
   Offset? _lastDotPoint;
+
+  // 회전 및 스케일 제어를 위한 상태 변수
+  Offset _actionCenter = Offset.zero;
+  double _startAngle = 0.0;
+  double _initialItemAngle = 0.0;
+  double _initialScale = 0.0;
+  double _startDistance = 0.0;
+
+  final TextEditingController _textInputController = TextEditingController();
+  final FocusNode _textFocusNode = FocusNode();
+  bool _isTextMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // 초기 앨범 제목 설정
+    _albumTitle = widget.album?['title'] ?? '새로운 앨범';
+  }
+
+  // 앨범 제목 수정 바텀시트 호출 함수
+  void _showTitleEditBottomSheet() async {
+    final newTitle = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true, // 키보드 올라올 때 바텀시트 스크롤 허용
+      backgroundColor: Colors.transparent,
+      builder: (context) => AlbumTitleEditBottomSheet(
+        initialTitle: _albumTitle,
+      ),
+    );
+
+    if (newTitle != null && newTitle.trim().isNotEmpty) {
+      setState(() {
+        _albumTitle = newTitle.trim();
+      });
+    }
+  }
 
   void _applyState(EditorState newState) {
     setState(() {
@@ -63,9 +106,10 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
       _redoStack.add(_current);
       _current = _history.last;
       _history.removeLast();
-      _isInitialState = _current.drawingPoints.isEmpty
-          && _current.background.color == null
-          && _current.background.image == null;
+      _isInitialState = _current.drawingPoints.isEmpty &&
+          _current.background.color == null &&
+          _current.background.image == null &&
+          _current.items.isEmpty;
     });
   }
 
@@ -75,9 +119,10 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
       _history.add(_current);
       _current = _redoStack.last;
       _redoStack.removeLast();
-      _isInitialState = _current.drawingPoints.isEmpty
-          && _current.background.color == null
-          && _current.background.image == null;
+      _isInitialState = _current.drawingPoints.isEmpty &&
+          _current.background.color == null &&
+          _current.background.image == null &&
+          _current.items.isEmpty;
     });
   }
 
@@ -86,44 +131,63 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
     _redoStack.clear();
   }
 
+  void _onItemTapped(String id) {
+    setState(() {
+      if (_selectedItemId == id) {
+        _selectedItemId = null;
+      } else {
+        _selectedItemId = id;
+        // 선택된 아이템을 리스트 맨 뒤로 보내어 최상단(가장 위 레이어)에 렌더링되게 함
+        final items = List<CanvasItem>.from(_current.items);
+        final index = items.indexWhere((item) => item.id == id);
+        if (index != -1 && index != items.length - 1) {
+          final selectedItem = items.removeAt(index);
+          items.add(selectedItem);
+          _saveToHistory();
+          _current = _current.copyWith(items: items);
+        }
+      }
+    });
+  }
+
   void _updateSelectedText({
     String? fontFamily,
     Color? color,
     TextAlign? textAlign,
     bool? isUnderline,
   }) {
-    if (_selectedTextIndex == null ||
-        _selectedTextIndex! >= _current.texts.length) return;
-    final texts = List<_CanvasText>.from(_current.texts);
-    texts[_selectedTextIndex!] = texts[_selectedTextIndex!].copyWith(
-      fontFamily: fontFamily,
-      color: color,
-      textAlign: textAlign,
-      isUnderline: isUnderline,
-    );
-    _applyState(_current.copyWith(texts: texts));
-  }
+    if (_selectedItemId == null) return;
+    final items = List<CanvasItem>.from(_current.items);
+    final index = items.indexWhere((i) => i.id == _selectedItemId);
+    if (index == -1) return;
 
-  final TextEditingController _textInputController = TextEditingController();
-  final FocusNode _textFocusNode = FocusNode();
-  bool _isTextMode = false;
+    final item = items[index];
+    if (item is CanvasTextItem) {
+      items[index] = item.copyWith(
+        fontFamily: fontFamily,
+        color: color,
+        textAlign: textAlign,
+        isUnderline: isUnderline,
+      );
+      _applyState(_current.copyWith(items: items));
+    }
+  }
 
   void _onTextConfirmed() {
     if (_textInputController.text.isNotEmpty) {
-      final newTexts = [
-        ..._current.texts,
-        _CanvasText(
-          text: _textInputController.text,
-          x: _textInputX,
-          y: _textInputY,
-          fontFamily: currentTextFamily,
-          color: currentTextColor,
-          textAlign: currentTextAlign,
-          isUnderline: currentTextUnderline,
-        ),
-      ];
-      _applyState(_current.copyWith(texts: newTexts));
-      setState(() => _selectedTextIndex = newTexts.length - 1);
+      final newItem = CanvasTextItem(
+        id: 'text_${DateTime.now().millisecondsSinceEpoch}',
+        text: _textInputController.text,
+        x: _textInputX,
+        y: _textInputY,
+        fontFamily: currentTextFamily,
+        color: currentTextColor,
+        textAlign: currentTextAlign,
+        isUnderline: currentTextUnderline,
+      );
+      final newItems = [..._current.items, newItem];
+      _applyState(_current.copyWith(items: newItems));
+      setState(() => _selectedItemId = newItem.id);
     }
     _textInputController.clear();
     _textFocusNode.unfocus();
@@ -136,6 +200,14 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    CanvasTextItem? selectedTextItem;
+    if (_selectedItemId != null) {
+      final idx = _current.items.indexWhere((i) => i.id == _selectedItemId);
+      if (idx != -1 && _current.items[idx] is CanvasTextItem) {
+        selectedTextItem = _current.items[idx] as CanvasTextItem;
+      }
+    }
+
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
@@ -150,9 +222,16 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
             alignment: Alignment.center,
             children: [
               Center(
-                child: Text(
-                  widget.album?['title'] ?? '새로운 앨범',
-                  style: AppTextStyle.subtitle20M120.copyWith(color: AppColors.f05),
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _showTitleEditBottomSheet, // 타이틀 터치 시 바텀시트 호출
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: Text(
+                      _albumTitle, // 상태 변수 사용
+                      style: AppTextStyle.subtitle20M120.copyWith(color: AppColors.f05),
+                    ),
+                  ),
                 ),
               ),
               Positioned(
@@ -165,7 +244,7 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
                       child: SvgPicture.asset(
                         'assets/system/icons/icon_undo.svg',
                         width: 24, height: 24,
-                        colorFilter: ColorFilter.mode(AppColors.f05, BlendMode.srcIn),
+                        colorFilter: const ColorFilter.mode(AppColors.f05, BlendMode.srcIn),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -174,7 +253,7 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
                       child: SvgPicture.asset(
                         'assets/system/icons/icon_redo.svg',
                         width: 24, height: 24,
-                        colorFilter: ColorFilter.mode(AppColors.f05, BlendMode.srcIn),
+                        colorFilter: const ColorFilter.mode(AppColors.f05, BlendMode.srcIn),
                       ),
                     ),
                   ],
@@ -200,7 +279,7 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
                     GestureDetector(
                       onTap: () {
                         Navigator.pop(context, {
-                          'title': widget.album?['title'] ?? '새로운 앨범',
+                          'title': _albumTitle, // 수정된 타이틀 반환
                           'edited': 'true',
                         });
                       },
@@ -222,8 +301,8 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
       ),
       body: Stack(
         children: [
-          // 배경
-          if (_current.background.color != null || _current.background.image != null)
+          // 1. 캔버스 배경 (가장 아래 레이어)
+          if (_current.background.color != null || _current.background.image != null || _current.background.svgPath != null)
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
@@ -232,22 +311,26 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
                       ? DecorationImage(image: _current.background.image!, fit: BoxFit.cover)
                       : null,
                 ),
+                // 추가된 부분: svgPath가 있으면 SvgPicture로 그려줌
+                child: _current.background.svgPath != null
+                    ? SvgPicture.asset(
+                  _current.background.svgPath!,
+                  fit: BoxFit.cover,
+                )
+                    : null,
               ),
             ),
 
-          // 스크롤 캔버스
+          // 2. 스크롤 캔버스
           Positioned.fill(
             child: GestureDetector(
-              onTap: () => setState(() {
-                _selectedTextIndex = null;
-                _selectedStickerIndex = null;
-              }),
+              onTap: () => setState(() => _selectedItemId = null),
               behavior: HitTestBehavior.translucent,
               child: SafeArea(child: _first()),
             ),
           ),
 
-          // 드로잉 획 표시 (항상)
+          // 3. 드로잉 획 표시
           if (_current.drawingPoints.isNotEmpty)
             Positioned.fill(
               child: IgnorePointer(
@@ -257,7 +340,7 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
               ),
             ),
 
-          // 드로잉 터치 입력 (드로잉 모드일 때만)
+          // 4. 드로잉 터치 입력
           if (_isDrawingMode)
             Positioned.fill(
               child: GestureDetector(
@@ -337,270 +420,205 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
               ),
             ),
 
-          // 배경 패널
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOut,
-            left: 0, right: 0,
-            bottom: _showBackgroundPanel ? 0 : -400,
-            child: BackgroundTabletPanel(
-              onClose: () => setState(() => _showBackgroundPanel = false),
-              onSave: () => setState(() => _showBackgroundPanel = false),
-              onColorChanged: (color) {
-                _applyState(_current.copyWith(
-                  background: BackgroundState(color: color),
-                ));
-              },
-            ),
-          ),
-
-          // 텍스트 아이템 렌더링
-          ..._canvasTexts.asMap().entries.map((entry) {
-            final index = entry.key;
-            final item = entry.value;
-            final isSelected = _selectedTextIndex == index;
-            const handleSize = 20.0;
+          // 5. 텍스트/스티커 통합 아이템 렌더링
+          ..._current.items.map((item) {
+            final isSelected = _selectedItemId == item.id;
+            final key = _itemKeys.putIfAbsent(item.id, () => GlobalKey());
+            const handleSize = 24.0;
             const padding = handleSize / 2;
             const handleShadow = [
               BoxShadow(color: Color(0x1F000000), blurRadius: 3, spreadRadius: 0, offset: Offset(0, 0)),
             ];
 
+            Widget content;
+            if (item is CanvasTextItem) {
+              content = Container(
+                key: key,
+                padding: const EdgeInsets.all(4),
+                decoration: isSelected
+                    ? BoxDecoration(
+                  border: Border.all(color: Colors.white, width: 2.0),
+                  borderRadius: BorderRadius.circular(4),
+                  boxShadow: const [BoxShadow(color: Color(0x1F000000), blurRadius: 3)],
+                )
+                    : BoxDecoration(
+                  border: Border.all(color: Colors.transparent, width: 2.0),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  item.text,
+                  textAlign: item.textAlign,
+                  style: TextStyle(
+                    fontSize: item.fontSize,
+                    color: item.color,
+                    fontFamily: item.fontFamily,
+                    decoration: item.isUnderline ? TextDecoration.underline : TextDecoration.none,
+                    decorationColor: item.color,
+                  ),
+                ),
+              );
+            } else if (item is CanvasStickerItem) {
+              content = Container(
+                key: key,
+                padding: const EdgeInsets.all(4),
+                decoration: isSelected
+                    ? BoxDecoration(
+                  border: Border.all(color: Colors.white, width: 2.0),
+                  borderRadius: BorderRadius.circular(4),
+                  boxShadow: const [BoxShadow(color: Color(0x1F000000), blurRadius: 3)],
+                )
+                    : BoxDecoration(
+                  border: Border.all(color: Colors.transparent, width: 2.0),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: item.svgPath != null
+                    ? SvgPicture.asset(item.svgPath!, width: item.size, height: item.size)
+                    : Text(item.emoji, style: TextStyle(fontSize: item.size * 0.7)),
+              );
+            } else {
+              content = const SizedBox();
+            }
+
             return Positioned(
               left: item.x - padding,
               top: item.y - padding,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(padding),
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => setState(() {
-                        _selectedTextIndex = _selectedTextIndex == index ? null : index;
-                      }),
-                      onPanStart: (_) => _saveToHistory(),
-                      onPanUpdate: (details) {
-                        final texts = List<_CanvasText>.from(_current.texts);
-                        texts[index] = texts[index].copyWith(
-                          x: texts[index].x + details.delta.dx,
-                          y: texts[index].y + details.delta.dy,
-                        );
-                        setState(() => _current = _current.copyWith(texts: texts));
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: isSelected
-                            ? BoxDecoration(
-                          border: Border.all(color: Colors.white, width: 2.0),
-                          borderRadius: BorderRadius.circular(4),
-                          boxShadow: const [
-                            BoxShadow(color: Color(0x1F000000), blurRadius: 3, spreadRadius: 0, offset: Offset(0, 0)),
-                          ],
-                        )
-                            : BoxDecoration(
-                          border: Border.all(color: Colors.transparent, width: 2.0),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          item.text,
-                          textAlign: item.textAlign,
-                          style: TextStyle(
-                            fontSize: item.fontSize,
-                            color: item.color,
-                            fontFamily: item.fontFamily,
-                            decoration: item.isUnderline ? TextDecoration.underline : TextDecoration.none,
-                            decorationColor: item.color,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // 좌측 상단: X (삭제)
-                  if (isSelected)
-                    Positioned(
-                      left: 0, top: 0,
+              child: Transform.rotate(
+                angle: item.angle,
+                alignment: Alignment.center,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(padding),
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
-                        onTap: () {
-                          final texts = List<_CanvasText>.from(_current.texts)..removeAt(index);
-                          _applyState(_current.copyWith(texts: texts));
-                          setState(() => _selectedTextIndex = null);
-                        },
-                        child: Container(
-                          width: handleSize, height: handleSize,
-                          decoration: BoxDecoration(
-                            color: AppColors.white, shape: BoxShape.circle, boxShadow: handleShadow,
-                          ),
-                          child: SvgPicture.asset(
-                            'assets/system/icons/icon_close.svg',
-                            width: 20, height: 20, fit: BoxFit.contain,
-                            colorFilter: ColorFilter.mode(AppColors.f05, BlendMode.srcIn),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  // 우측 하단: 크기 조절
-                  if (isSelected)
-                    Positioned(
-                      right: 0, bottom: 0,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
+                        onTap: () => _onItemTapped(item.id),
                         onPanStart: (_) => _saveToHistory(),
                         onPanUpdate: (details) {
-                          final texts = List<_CanvasText>.from(_current.texts);
-                          texts[index] = texts[index].copyWith(
-                            fontSize: (texts[index].fontSize + details.delta.dx * 0.3).clamp(8, 80),
-                          );
-                          setState(() => _current = _current.copyWith(texts: texts));
+                          final itemsList = List<CanvasItem>.from(_current.items);
+                          final idx = itemsList.indexWhere((i) => i.id == item.id);
+                          if (idx != -1) {
+                            itemsList[idx] = itemsList[idx].copyWith(
+                              x: itemsList[idx].x + details.delta.dx,
+                              y: itemsList[idx].y + details.delta.dy,
+                            );
+                            setState(() => _current = _current.copyWith(items: itemsList));
+                          }
                         },
-                        child: Container(
-                          width: handleSize, height: handleSize,
-                          decoration: BoxDecoration(
-                            color: AppColors.white, shape: BoxShape.circle, boxShadow: handleShadow,
+                        child: content,
+                      ),
+                    ),
+
+                    // 좌측 상단: X (삭제)
+                    if (isSelected)
+                      Positioned(
+                        left: 0, top: 0,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            final itemsList = List<CanvasItem>.from(_current.items)..removeWhere((i) => i.id == item.id);
+                            _applyState(_current.copyWith(items: itemsList));
+                            setState(() => _selectedItemId = null);
+                          },
+                          child: Container(
+                            width: handleSize, height: handleSize,
+                            decoration: const BoxDecoration(color: AppColors.white, shape: BoxShape.circle, boxShadow: handleShadow),
+                            child: SvgPicture.asset('assets/system/icons/icon_close.svg', width: 20, height: 20, colorFilter: const ColorFilter.mode(AppColors.f05, BlendMode.srcIn)),
                           ),
-                          child: Center(
-                            child: SvgPicture.asset(
-                              'assets/system/icons/icon_zoom_inout.svg',
-                              width: 20, height: 20, fit: BoxFit.contain,
-                              colorFilter: ColorFilter.mode(AppColors.f05, BlendMode.srcIn),
+                        ),
+                      ),
+
+                    // 우측 상단: 회전 (atan2 활용)
+                    if (isSelected)
+                      Positioned(
+                        right: 0, top: 0,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onPanStart: (details) {
+                            _saveToHistory();
+                            final RenderBox box = key.currentContext!.findRenderObject() as RenderBox;
+                            _actionCenter = box.localToGlobal(box.size.center(Offset.zero));
+                            _initialItemAngle = item.angle;
+                            _startAngle = math.atan2(
+                              details.globalPosition.dy - _actionCenter.dy,
+                              details.globalPosition.dx - _actionCenter.dx,
+                            );
+                          },
+                          onPanUpdate: (details) {
+                            final double currentAngle = math.atan2(
+                              details.globalPosition.dy - _actionCenter.dy,
+                              details.globalPosition.dx - _actionCenter.dx,
+                            );
+                            final itemsList = List<CanvasItem>.from(_current.items);
+                            final idx = itemsList.indexWhere((i) => i.id == item.id);
+                            if (idx != -1) {
+                              itemsList[idx] = itemsList[idx].copyWith(
+                                angle: _initialItemAngle + (currentAngle - _startAngle),
+                              );
+                              setState(() => _current = _current.copyWith(items: itemsList));
+                            }
+                          },
+                          child: Container(
+                            width: handleSize, height: handleSize,
+                            decoration: const BoxDecoration(color: AppColors.white, shape: BoxShape.circle, boxShadow: handleShadow),
+                            child: Center(
+                              child: SvgPicture.asset('assets/system/icons/icon_autorenew.svg', width: 16, height: 16, colorFilter: const ColorFilter.mode(AppColors.f05, BlendMode.srcIn)),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                ],
-              ),
-            );
-          }),
 
-          // 스티커 렌더링 (Doc3 그대로)
-          ..._canvasStickers.asMap().entries.map((entry) {
-            final index = entry.key;
-            final item = entry.value;
-            final isSelected = _selectedStickerIndex == index;
-            const handleSize = 20.0;
-            const padding = handleSize / 2;
-            const handleShadow = [
-              BoxShadow(color: Color(0x1F000000), blurRadius: 3, spreadRadius: 0, offset: Offset(0, 0)),
-            ];
-
-            return Positioned(
-              left: item.x - padding,
-              top: item.y - padding,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(padding),
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => setState(() {
-                        _selectedStickerIndex = isSelected ? null : index;
-                        _selectedTextIndex = null;
-                      }),
-                      onPanUpdate: (details) {
-                        setState(() {
-                          item.x += details.delta.dx;
-                          item.y += details.delta.dy;
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: isSelected
-                            ? BoxDecoration(
-                          border: Border.all(color: Colors.white, width: 2.0),
-                          borderRadius: BorderRadius.circular(4),
-                          boxShadow: const [
-                            BoxShadow(color: Color(0x1F000000), blurRadius: 3, spreadRadius: 0, offset: Offset(0, 0)),
-                          ],
-                        )
-                            : BoxDecoration(
-                          border: Border.all(color: Colors.transparent, width: 2.0),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: item.svgPath != null
-                            ? SvgPicture.asset(item.svgPath!, width: item.size, height: item.size)
-                            : Text(item.emoji, style: TextStyle(fontSize: item.size * 0.7)),
-                      ),
-                    ),
-                  ),
-                  if (isSelected)
-                    Positioned(
-                      left: 0, top: 0,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () {
-                          setState(() {
-                            _canvasStickers.removeAt(index);
-                            _selectedStickerIndex = null;
-                          });
-                        },
-                        child: Container(
-                          width: handleSize, height: handleSize,
-                          decoration: BoxDecoration(
-                            color: AppColors.white, shape: BoxShape.circle, boxShadow: handleShadow,
-                          ),
-                          child: SvgPicture.asset(
-                            'assets/system/icons/icon_close.svg',
-                            width: 20, height: 20, fit: BoxFit.contain,
-                            colorFilter: ColorFilter.mode(AppColors.f05, BlendMode.srcIn),
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (isSelected)
-                    Positioned(
-                      right: 0, bottom: 0,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onPanUpdate: (details) {
-                          setState(() {
-                            item.size = (item.size + details.delta.dx).clamp(24.0, 200.0);
-                          });
-                        },
-                        child: Container(
-                          width: handleSize, height: handleSize,
-                          decoration: BoxDecoration(
-                            color: AppColors.white, shape: BoxShape.circle, boxShadow: handleShadow,
-                          ),
-                          child: Center(
-                            child: SvgPicture.asset(
-                              'assets/system/icons/icon_zoom_inout.svg',
-                              width: 20, height: 20, fit: BoxFit.contain,
-                              colorFilter: ColorFilter.mode(AppColors.f05, BlendMode.srcIn),
+                    // 우측 하단: 크기 조절 (중심점으로부터의 거리 기반 스케일)
+                    if (isSelected)
+                      Positioned(
+                        right: 0, bottom: 0,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onPanStart: (details) {
+                            _saveToHistory();
+                            final RenderBox box = key.currentContext!.findRenderObject() as RenderBox;
+                            _actionCenter = box.localToGlobal(box.size.center(Offset.zero));
+                            if (item is CanvasTextItem) {
+                              _initialScale = item.fontSize;
+                            } else if (item is CanvasStickerItem) {
+                              _initialScale = item.size;
+                            }
+                            _startDistance = (details.globalPosition - _actionCenter).distance;
+                          },
+                          onPanUpdate: (details) {
+                            final currentDistance = (details.globalPosition - _actionCenter).distance;
+                            final scaleFactor = currentDistance / _startDistance;
+                            final itemsList = List<CanvasItem>.from(_current.items);
+                            final idx = itemsList.indexWhere((i) => i.id == item.id);
+                            if (idx != -1) {
+                              if (item is CanvasTextItem) {
+                                itemsList[idx] = (itemsList[idx] as CanvasTextItem).copyWith(
+                                  fontSize: (_initialScale * scaleFactor).clamp(8.0, 200.0),
+                                );
+                              } else if (item is CanvasStickerItem) {
+                                itemsList[idx] = (itemsList[idx] as CanvasStickerItem).copyWith(
+                                  size: (_initialScale * scaleFactor).clamp(24.0, 400.0),
+                                );
+                              }
+                              setState(() => _current = _current.copyWith(items: itemsList));
+                            }
+                          },
+                          child: Container(
+                            width: handleSize, height: handleSize,
+                            decoration: const BoxDecoration(color: AppColors.white, shape: BoxShape.circle, boxShadow: handleShadow),
+                            child: Center(
+                              child: SvgPicture.asset('assets/system/icons/icon_zoom_inout.svg', width: 20, height: 20, colorFilter: const ColorFilter.mode(AppColors.f05, BlendMode.srcIn)),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             );
-          }),
+          }).toList(),
 
-          // 드로잉 툴 패널
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOut,
-            left: 0, right: 0,
-            bottom: _showDrawingPanel ? 0 : -500,
-            child: DrawingToolPanel(
-              onSettingsChanged: (style, width, color) {
-                setState(() {
-                  currentLineStyle = style;
-                  currentLineWidth = width;
-                  currentColor = color;
-                });
-              },
-              onClose: () => setState(() {
-                _showDrawingPanel = false;
-                _isDrawingMode = false;
-              }),
-            ),
-          ),
-
+          // 6. 텍스트 입력창
           if (_isTextMode)
             Positioned(
               left: _textInputX,
@@ -635,7 +653,56 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
               ),
             ),
 
-          // 하단 아이콘바
+          // 7. UI 시트 패널들 (항상 캔버스 아이템들보다 위에 오도록 가장 하단에 배치)
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+            left: 0, right: 0,
+            bottom: _showBackgroundPanel ? 0 : -400,
+            child: BackgroundTabletPanel(
+              // 패널을 열 때 현재 적용된 상태를 넘겨줌 (탭 위치 동기화)
+              selectedColor: _current.background.color,
+              selectedSvgPath: _current.background.svgPath,
+              onClose: () => setState(() => _showBackgroundPanel = false),
+              onSave: () => setState(() => _showBackgroundPanel = false),
+              onColorChanged: (color) {
+                _applyState(_current.copyWith(
+                  // 색상 변경 시 기존의 svg 상태는 덮어씌워 무지로 만듦
+                  background: BackgroundState(color: color, svgPath: null),
+                ));
+              },
+              // 추가된 부분: 개별 SVG 탭 클릭 시 상태 업데이트
+              onSvgBackgroundChanged: (svgPath) {
+                _applyState(_current.copyWith(
+                  background: BackgroundState(
+                    color: svgPath == null ? _current.background.color : Colors.white, // SVG일 경우 기본 흰색 배경
+                    svgPath: svgPath,
+                  ),
+                ));
+              },
+            ),
+          ),
+
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+            left: 0, right: 0,
+            bottom: _showDrawingPanel ? 0 : -500,
+            child: DrawingToolPanel(
+              onSettingsChanged: (style, width, color) {
+                setState(() {
+                  currentLineStyle = style;
+                  currentLineWidth = width;
+                  currentColor = color;
+                });
+              },
+              onClose: () => setState(() {
+                _showDrawingPanel = false;
+                _isDrawingMode = false;
+              }),
+            ),
+          ),
+
           if (!_showBackgroundPanel && !_showDrawingPanel && !_showModalSheet)
             Positioned(
               left: 0, right: 0,
@@ -643,9 +710,7 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
               child: Center(
                 child: EditorIconBar(
                   isTextMode: _isTextMode,
-                  selectedFontFamily: _selectedTextIndex != null && _selectedTextIndex! < _canvasTexts.length
-                      ? _canvasTexts[_selectedTextIndex!].fontFamily
-                      : currentTextFamily,
+                  selectedFontFamily: selectedTextItem?.fontFamily ?? currentTextFamily,
                   onBackgroundPressed: () {
                     setState(() {
                       _showBackgroundPanel = !_showBackgroundPanel;
@@ -667,13 +732,14 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
                     if (!mounted) return null;
                     setState(() => _showModalSheet = false);
                     if (sticker != null) {
-                      setState(() {
-                        _canvasStickers.add(_CanvasSticker(
-                          svgPath: sticker.svgPath,
-                          emoji: sticker.emoji,
-                        ));
-                        _selectedStickerIndex = _canvasStickers.length - 1;
-                      });
+                      final newItem = CanvasStickerItem(
+                        id: 'sticker_${DateTime.now().millisecondsSinceEpoch}',
+                        svgPath: sticker.svgPath,
+                        emoji: sticker.emoji,
+                      );
+                      final newItems = [..._current.items, newItem];
+                      _applyState(_current.copyWith(items: newItems));
+                      setState(() => _selectedItemId = newItem.id);
                     }
                     return sticker;
                   },
@@ -793,35 +859,36 @@ class _AlbumEditFormPageState extends State<AlbumEditFormPage> {
   }
 }
 
-
+// ================== Models ==================
 
 class BackgroundState {
   final Color? color;
   final ImageProvider? image;
+  final String? svgPath; // 추가된 부분
 
-  BackgroundState({this.color, this.image});
+  BackgroundState({this.color, this.image, this.svgPath});
 }
 
 class EditorState {
   final List<DrawingPoint?> drawingPoints;
   final BackgroundState background;
-  final List<_CanvasText> texts;
+  final List<CanvasItem> items; // 통합된 아이템 리스트
 
   EditorState({
     this.drawingPoints = const [],
     BackgroundState? background,
-    this.texts = const [],
+    this.items = const [],
   }) : background = background ?? BackgroundState();
 
   EditorState copyWith({
     List<DrawingPoint?>? drawingPoints,
     BackgroundState? background,
-    List<_CanvasText>? texts,
+    List<CanvasItem>? items,
   }) {
     return EditorState(
       drawingPoints: drawingPoints ?? this.drawingPoints,
       background: background ?? this.background,
-      texts: texts ?? this.texts,
+      items: items ?? this.items,
     );
   }
 }
@@ -903,36 +970,37 @@ class DrawingPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
-class _CanvasSticker {
-  final String? svgPath;
-  final String emoji;
-  double x;
-  double y;
-  double size;
-
-  _CanvasSticker({
-    this.svgPath,
-    this.emoji = '',
-    this.x = 100,
-    this.y = 200,
-    this.size = 80,
-  });
-}
-
-class _CanvasText {
-  final String text;
+// --- 공통 캔버스 아이템 (텍스트, 스티커 통합용) ---
+abstract class CanvasItem {
+  final String id;
   final double x;
   final double y;
+  final double angle;
+
+  CanvasItem({
+    required this.id,
+    required this.x,
+    required this.y,
+    this.angle = 0.0,
+  });
+
+  CanvasItem copyWith({double? x, double? y, double? angle});
+}
+
+class CanvasTextItem extends CanvasItem {
+  final String text;
   final double fontSize;
   final String fontFamily;
   final Color color;
   final TextAlign textAlign;
   final bool isUnderline;
 
-  _CanvasText({
+  CanvasTextItem({
+    required super.id,
+    super.x = 80,
+    super.y = 200,
+    super.angle = 0.0,
     required this.text,
-    this.x = 80,
-    this.y = 200,
     this.fontSize = 20,
     this.fontFamily = 'Pretendard',
     this.color = Colors.black,
@@ -940,23 +1008,214 @@ class _CanvasText {
     this.isUnderline = false,
   });
 
-  _CanvasText copyWith({
+  @override
+  CanvasTextItem copyWith({
     double? x,
     double? y,
+    double? angle,
+    String? text,
     double? fontSize,
     String? fontFamily,
     Color? color,
     TextAlign? textAlign,
     bool? isUnderline,
-  }) =>
-      _CanvasText(
-        text: text,
-        x: x ?? this.x,
-        y: y ?? this.y,
-        fontSize: fontSize ?? this.fontSize,
-        fontFamily: fontFamily ?? this.fontFamily,
-        color: color ?? this.color,
-        textAlign: textAlign ?? this.textAlign,
-        isUnderline: isUnderline ?? this.isUnderline,
-      );
+  }) {
+    return CanvasTextItem(
+      id: id,
+      x: x ?? this.x,
+      y: y ?? this.y,
+      angle: angle ?? this.angle,
+      text: text ?? this.text,
+      fontSize: fontSize ?? this.fontSize,
+      fontFamily: fontFamily ?? this.fontFamily,
+      color: color ?? this.color,
+      textAlign: textAlign ?? this.textAlign,
+      isUnderline: isUnderline ?? this.isUnderline,
+    );
+  }
+}
+
+class CanvasStickerItem extends CanvasItem {
+  final String? svgPath;
+  final String emoji;
+  final double size;
+
+  CanvasStickerItem({
+    required super.id,
+    super.x = 100,
+    super.y = 200,
+    super.angle = 0.0,
+    this.svgPath,
+    this.emoji = '',
+    this.size = 80,
+  });
+
+  @override
+  CanvasStickerItem copyWith({
+    double? x,
+    double? y,
+    double? angle,
+    String? svgPath,
+    String? emoji,
+    double? size,
+  }) {
+    return CanvasStickerItem(
+      id: id,
+      x: x ?? this.x,
+      y: y ?? this.y,
+      angle: angle ?? this.angle,
+      svgPath: svgPath ?? this.svgPath,
+      emoji: emoji ?? this.emoji,
+      size: size ?? this.size,
+    );
+  }
+}
+
+// ================== Bottom Sheet Widget ==================
+
+class AlbumTitleEditBottomSheet extends StatefulWidget {
+  final String initialTitle;
+
+  const AlbumTitleEditBottomSheet({super.key, required this.initialTitle});
+
+  @override
+  State<AlbumTitleEditBottomSheet> createState() => _AlbumTitleEditBottomSheetState();
+}
+
+class _AlbumTitleEditBottomSheetState extends State<AlbumTitleEditBottomSheet> {
+  late TextEditingController _titleController;
+  late FocusNode _focusNode;
+
+  bool get _hasText => _titleController.text.isNotEmpty;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.initialTitle);
+    _focusNode = FocusNode();
+
+    // 바텀시트가 열리면 자동으로 텍스트 필드에 포커스를 줍니다
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _onCancel() {
+    Navigator.pop(context);
+  }
+
+  void _onConfirm() {
+    if (_hasText) {
+      Navigator.pop(context, _titleController.text);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // 키보드 높이만큼 패딩 추가
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, 28, 20, 20 + bottomInset),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 제목 텍스트
+          Text(
+            '앨범 제목',
+            style: AppTextStyle.subtitle20M120.copyWith(color: AppColors.f05),
+          ),
+          const SizedBox(height: 16),
+
+          // 텍스트 입력 필드
+          // 참고: AppTextField가 존재하지 않는다는 에러 발생 시 최상단에 import 경로를 추가해 주세요.
+          AppTextField(
+            controller: _titleController,
+            focusNode: _focusNode,
+            hintText: '앨범 제목을 입력해주세요',
+            suffixIcon: _hasText
+                ? IconButton(
+              onPressed: () {
+                _titleController.clear();
+                setState(() {});
+              },
+              icon: SvgPicture.asset(
+                'assets/system/icons/icon_close_big.svg',
+                width: 24,
+                height: 24,
+                colorFilter: const ColorFilter.mode(
+                  AppColors.f04,
+                  BlendMode.srcIn,
+                ),
+              ),
+            )
+                : null,
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 20),
+
+          // 취소 / 확인 버튼
+          Row(
+            children: [
+              // 취소
+              Expanded(
+                child: GestureDetector(
+                  onTap: _onCancel,
+                  child: Container(
+                    height: 55,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.gray02),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '취소',
+                      style: AppTextStyle.body16R120.copyWith(color: AppColors.f05),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // 확인
+              Expanded(
+                child: GestureDetector(
+                  onTap: _hasText ? _onConfirm : null,
+                  child: Container(
+                    height: 55,
+                    decoration: BoxDecoration(
+                      color: _hasText ? AppColors.black : AppColors.bg,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: _hasText ? AppColors.gray05 : AppColors.gray01,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '확인',
+                      style: AppTextStyle.body16R120.copyWith(
+                        color: _hasText ? AppColors.white : AppColors.f03,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }

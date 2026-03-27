@@ -28,7 +28,7 @@ class HomePage extends StatelessWidget {
             ),
             onPressed: () {
               Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const AlarmPage()));
+                  MaterialPageRoute(builder: (_) => AlarmPage()));
             },
             splashColor: Colors.transparent,
             highlightColor: Colors.transparent,

@@ -53,7 +53,7 @@ class _AlbumCreateSheetState extends State<_AlbumCreateSheet> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => const AlbumEditFormPage(),
+        builder: (_) => AlbumEditFormPage(album:{'title': title}),
       ),
     );
   }
